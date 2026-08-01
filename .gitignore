@@ -12,3 +12,6 @@ Thumbs.db
 
 # Audit output — contains exploit detail and secret locations. Never commit.
 .security-audit/
+
+# Release zip — attached to GitHub Releases, not committed.
+dist/
