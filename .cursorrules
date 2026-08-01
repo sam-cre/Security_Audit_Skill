@@ -1,0 +1,32 @@
+# Security Audit Skill
+
+Multi-phase security audit skill. When the user asks for a security audit, pentest, threat model, or hardening review, follow `skill/security-audit/SKILL.md`.
+
+## Path resolution
+
+All `references/...` paths resolve relative to **`skill/security-audit/`**, not to the audited project. Audit artifacts are written to `.security-audit/` in the audited project root. Do not confuse the two trees.
+
+## Loading order
+
+1. `skill/security-audit/SKILL.md` — workflow, modes, domain router
+2. `skill/security-audit/references/rules.md` — confidence calibration, CVSS, CVE verification, safety constraints. Load once; applies to all phases.
+3. `references/phases/phase-N-*.md` — one at a time, as you reach each phase. Never pre-load.
+4. `references/domains/*.md` — only the guides matching the project type identified in Phase 0.
+
+## Modes
+
+- `quick` — phases 0, 1, 4, 6 (read-only triage)
+- `standard` — phases 0–6 (default)
+- `deep` — phases 0–8 (adds CI/CD guardrails and guided hardening)
+- `setup` — guided scanner installation
+- `diff` — differential re-audit
+
+## Rules
+
+1. Never modify project files before Phase 4 approval — phases 0–3 write only to `.security-audit/`
+2. Never fabricate CVE numbers — scanner output or OSV.dev API only
+3. Never invent a CVSS numeric score — emit the vector string; mark the score verified or not computed
+4. Every finding carries a confidence rating; low confidence is flagged for manual review, never auto-fixed
+5. Every finding needs a real source-to-sink trace and a concrete exploit scenario
+6. Report coverage honestly, including what could not be reviewed
+7. If a fix fails twice, roll back with `git checkout -- <file>`

@@ -1,0 +1,49 @@
+# Azure DevOps Pipeline Security Audit Guardrail Template
+# Include in your azure-pipelines.yml
+
+trigger:
+  branches:
+    include:
+      - main
+      - master
+pr:
+  branches:
+    include:
+      - main
+      - master
+
+jobs:
+- job: ContinuousSecurityAudit
+  displayName: 'Automated SAST, SCA & Secret Audit'
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x'
+    displayName: 'Setup Python'
+
+  - script: |
+      pip install semgrep checkov
+    displayName: 'Install SAST & IaC Scanners'
+
+  - script: |
+      curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+    displayName: 'Install Syft & Trivy'
+
+  - script: |
+      semgrep scan --config=auto --config=.semgrep/ --sarif --output=semgrep-results.sarif . || true
+    displayName: 'Run Semgrep SAST & Custom Rules'
+
+  - script: |
+      trivy fs --format sarif --output trivy-results.sarif . || true
+    displayName: 'Run Trivy SCA Scan'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.SourcesDirectory)'
+      ArtifactName: 'security-audit-reports'
+    condition: always()
+    displayName: 'Publish Security Scan Artifacts'

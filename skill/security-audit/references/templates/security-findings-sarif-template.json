@@ -1,0 +1,65 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Security Audit Hybrid Scanner",
+          "version": "1.0.0",
+          "informationUri": "https://github.com/sam-cre/VORA-Vision",
+          "rules": [
+            {
+              "id": "SEC-001",
+              "name": "SQLInjection",
+              "shortDescription": {
+                "text": "Unparameterized SQL Query Construction"
+              },
+              "fullDescription": {
+                "text": "Untrusted input reaches SQL execution sink via string concatenation or format string interpolation."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "helpUri": "https://cwe.mitre.org/data/definitions/89.html",
+              "properties": {
+                "tags": ["security", "OWASP-A03:2021", "CWE-89"],
+                "precision": "high"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "SEC-001",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "User-supplied parameter passed directly into raw SQL query concatenation."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/db/queries.py"
+                },
+                "region": {
+                  "startLine": 42,
+                  "endLine": 45,
+                  "startColumn": 1,
+                  "endColumn": 80
+                }
+              }
+            }
+          ],
+          "properties": {
+            "cvssV4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H",
+            "confidence": "High",
+            "status": "Confirmed Exploitable"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+# GitLab CI/CD Security Audit Guardrail Template
+# Include this in your .gitlab-ci.yml or trigger as a child pipeline
+
+stages:
+  - security-audit
+
+.security_template:
+  stage: security-audit
+  allow_failure: true
+
+gitleaks_secrets_scan:
+  extends: .security_template
+  image:
+    name: zricethezav/gitleaks:latest
+    entrypoint: [""]
+  script:
+    - gitleaks detect --source . --report-path gitleaks-report.json --report-format json --no-banner
+  artifacts:
+    when: always
+    paths:
+      - gitleaks-report.json
+    reports:
+      secret_detection: gitleaks-report.json
+
+semgrep_sast_scan:
+  extends: .security_template
+  image: returntocorp/semgrep:latest
+  script:
+    - semgrep scan --config=auto --config=.semgrep/ --json --output=semgrep-report.json .
+  artifacts:
+    when: always
+    paths:
+      - semgrep-report.json
+
+trivy_sca_scan:
+  extends: .security_template
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  script:
+    - trivy fs --format sarif --output trivy-report.sarif .
+  artifacts:
+    when: always
+    paths:
+      - trivy-report.sarif
+    reports:
+      container_scanning: trivy-report.sarif
