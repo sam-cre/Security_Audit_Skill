@@ -43,7 +43,7 @@ Use ASVS levels to determine the required depth of security verification:
 |---|---|---|
 | PCI-DSS 4.0 | 6.2.4 | Prevent common software attacks including injection |
 | SOC 2 | CC6.1 | Logical and physical access controls |
-| HIPAA | §164.312(a)(1) | Access control — unique user identification |
+| HIPAA | §164.312(a)(1) | Access control - unique user identification |
 | GDPR | Article 32(1)(b) | Ensure confidentiality and integrity of processing |
 | ISO 27001 | A.8.26 | Application security requirements |
 | NIST CSF 2.0 | PR.DS-1 | Data-at-rest protection |
@@ -67,7 +67,7 @@ Use ASVS levels to determine the required depth of security verification:
 |---|---|---|
 | PCI-DSS 4.0 | 7.2 | Access control system configured properly |
 | SOC 2 | CC6.3 | Role-based access control |
-| HIPAA | §164.312(a)(1) | Access control — minimum necessary |
+| HIPAA | §164.312(a)(1) | Access control - minimum necessary |
 | GDPR | Article 25 | Data protection by design and default |
 | ISO 27001 | A.8.3 | Access restriction |
 | NIST CSF 2.0 | PR.AA-5 | Access permissions management |

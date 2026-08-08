@@ -1,7 +1,7 @@
 ---
 name: security-audit
 description: >-
-  Multi-phase security audit and penetration test for any codebase — web apps, APIs, CLIs,
+  Multi-phase security audit and penetration test for any codebase - web apps, APIs, CLIs,
   mobile, desktop, browser extensions, microservices, IaC/cloud, LLM/AI agents, smart contracts,
   embedded/IoT, data pipelines, games, CMS and low-code. Combines SAST/SCA/DAST scanners with
   reasoned code review, adversarial false-negative hunting, executable proof-of-concept
@@ -14,11 +14,11 @@ allowed-tools: Read, Grep, Glob, Write, Edit, Bash, WebFetch, Task, TodoWrite
 
 # Security Audit
 
-Evidence-based hybrid security audit. Adapt to what the project actually **is** — do not assume a web app, language, or framework until Phase 0 confirms it.
+Evidence-based hybrid security audit. Adapt to what the project actually **is** - do not assume a web app, language, or framework until Phase 0 confirms it.
 
-## Path Resolution — read this first
+## Path Resolution - read this first
 
-Every `references/...` path below is **relative to this skill's own directory** (the folder containing this SKILL.md), *not* the project being audited. If a Read fails, locate this SKILL.md and resolve from there. Never guess at file contents you could not load — say the load failed.
+Every `references/...` path below is **relative to this skill's own directory** (the folder containing this SKILL.md), *not* the project being audited. If a Read fails, locate this SKILL.md and resolve from there. Never guess at file contents you could not load - say the load failed.
 
 Audit artifacts are written to **`.security-audit/`** in the *audited project's* root. These two trees are different things; never conflate them.
 
@@ -29,7 +29,7 @@ Audit artifacts are written to **`.security-audit/`** in the *audited project's*
 3. **Read-only until approval.** Phases 0–4 modify nothing in the project. Only `.security-audit/` is written.
 4. **Executable evidence.** Confirmed vulnerabilities get a runnable PoC; fixes get regression rules.
 
-**Read `references/rules.md` now.** It is the single source of truth for confidence calibration, CVE verification, CVSS v4.0 scoring, the finding schema, and safety constraints. It is loaded once and applies to every phase — later phases do not restate it.
+**Read `references/rules.md` now.** It is the single source of truth for confidence calibration, CVE verification, CVSS v4.0 scoring, the finding schema, and safety constraints. It is loaded once and applies to every phase - later phases do not restate it.
 
 ## Modes
 
@@ -40,8 +40,8 @@ Determine the mode before Phase 0. Default is `standard`.
 | `quick` | 0, 1, 4, 6 | Read-only triage. PR review, single scripts, small services. No fixes applied. |
 | `standard` | 0–6 | Full audit: analysis, PoC verification, approved fixes, reports. |
 | `deep` | 0–8 | Everything + CI/CD guardrails + guided infrastructure hardening. Production systems. |
-| `setup` | — | Guided security-tool installation only. Read `references/setup/tool-install.md`. |
-| `diff` | — | Re-audit of a previously audited project. Read `references/differential-audit-protocol.md`. |
+| `setup` | - | Guided security-tool installation only. Read `references/setup/tool-install.md`. |
+| `diff` | - | Re-audit of a previously audited project. Read `references/differential-audit-protocol.md`. |
 
 ## Phases
 
@@ -85,13 +85,13 @@ In Phase 0, identify the project type and load **only** the matching guides for 
 
 ## Context Discipline
 
-Each phase file opens with what to hold and what to release — follow it. Never hold more than one phase file at a time. Release domain guides after Phase 1.
+Each phase file opens with what to hold and what to release - follow it. Never hold more than one phase file at a time. Release domain guides after Phase 1.
 
 For codebases over ~50 files or 3+ languages, read `references/multi-agent-strategy.md` and parallelize Phase 1 by module.
 
 ## Output Workspace
 
-Create `.security-audit/` in the audited project root; Phase 0 lists the files. Offer to add it to `.gitignore` — it contains exploit detail. If it already exists from a prior run, use `references/differential-audit-protocol.md` instead of starting over.
+Create `.security-audit/` in the audited project root; Phase 0 lists the files. Offer to add it to `.gitignore` - it contains exploit detail. If it already exists from a prior run, use `references/differential-audit-protocol.md` instead of starting over.
 
 ## Load Only If Needed
 

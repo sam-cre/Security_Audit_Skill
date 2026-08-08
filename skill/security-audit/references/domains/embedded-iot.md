@@ -74,7 +74,7 @@ _Load this during Phase 1 when auditing embedded firmware, IoT devices, real-tim
 
 ### Memory Protection
 - Missing stack canaries in compiled firmware
-- No ASLR (Address Space Layout Randomization) — often unavailable on microcontrollers
+- No ASLR (Address Space Layout Randomization) - often unavailable on microcontrollers
 - Executable stack / heap (NX bit not set)
 - Missing MPU (Memory Protection Unit) configuration on Cortex-M devices
 

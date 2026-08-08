@@ -1,4 +1,4 @@
-# Phase 2 — Dynamic Analysis & Executable PoC Harnesses
+# Phase 2 - Dynamic Analysis & Executable PoC Harnesses
 
 _Load this after Phase 1.5 is complete. Also load the language-specific PoC template(s) matching the project's language(s)._
 
@@ -41,7 +41,7 @@ Choose the PoC template matching the project's primary language:
 
 ---
 
-## Step 2: DAST — Live Service Testing (If Applicable)
+## Step 2: DAST - Live Service Testing (If Applicable)
 
 When the project under audit is a **running web service**, supplement static PoC harnesses with live endpoint testing.
 
@@ -80,7 +80,7 @@ DAST-discovered findings use the same finding schema as Phase 1, with `detectedB
 For each test, record a structured verdict:
 
 ```markdown
-### Test: test_sec001_poc.py — targets SEC-001
+### Test: test_sec001_poc.py - targets SEC-001
 - **Payload/Method:** [what was sent/executed]
 - **Expected if Secure:** [what should happen if the vulnerability is fixed]
 - **Observed:** [what actually happened]

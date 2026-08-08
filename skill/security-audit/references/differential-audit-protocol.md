@@ -1,6 +1,6 @@
 # Differential Re-Audit Protocol
 
-This document defines how to conduct a re-audit efficiently when `.security-audit/` already exists from a prior run. A re-audit should not repeat the full audit — it should focus on what changed, verify fixes hold, and catch new instances of known vulnerability patterns.
+This document defines how to conduct a re-audit efficiently when `.security-audit/` already exists from a prior run. A re-audit should not repeat the full audit - it should focus on what changed, verify fixes hold, and catch new instances of known vulnerability patterns.
 
 ---
 
@@ -40,13 +40,13 @@ Produce a `.security-audit/diff-scope.md` listing:
 Before scanning changed files, read and internalize:
 
 0. **Schema Version Check:** Compare the `skillVersion` field in the prior `security-findings.json` against the current skill version. If the schema has changed (e.g., new required fields like `complianceMappings` or `triageEvidence` were added), migrate the prior findings to the current schema before merging. Log any fields that were absent in the prior version and backfill with sensible defaults or `null`.
-1. **Prior `security-findings.json`** — understand what was found before, what was fixed, and what was accepted-risk
-2. **Prior `threat-model.md`** — check whether new code introduces new trust boundaries or entry points
-3. **Prior Phase 6 Semgrep rules** — these encode the exact vulnerability patterns previously fixed
+1. **Prior `security-findings.json`** - understand what was found before, what was fixed, and what was accepted-risk
+2. **Prior `threat-model.md`** - check whether new code introduces new trust boundaries or entry points
+3. **Prior Phase 6 Semgrep rules** - these encode the exact vulnerability patterns previously fixed
 
 ### Carry-Forward Rules
 - **Accepted-risk findings** from the prior audit keep their status unless the code they reference has changed
-- **Resolved findings** are presumed still-resolved unless their code has changed — but they get regression-tested in Step 4
+- **Resolved findings** are presumed still-resolved unless their code has changed - but they get regression-tested in Step 4
 - **Prior threat model** is updated only if new entry points, dependencies, or auth mechanisms have been added
 
 ---

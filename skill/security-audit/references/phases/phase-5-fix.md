@@ -1,4 +1,4 @@
-# Phase 4 — Automated Remediation & Re-Testing
+# Phase 4 - Automated Remediation & Re-Testing
 
 _Load this only after explicit Phase 3 user approval. Also load `.security-audit/audit-checklist.md`._
 
@@ -110,7 +110,7 @@ Keep `.security-audit/audit-checklist.md` and `.security-audit/security-findings
 | Status | Meaning |
 |---|---|
 | `Resolved` | Fix applied and PoC harness confirms vulnerability is closed |
-| `Requires Manual Review` | Fix failed twice (rolled back) or Confidence: Low — needs human expert |
+| `Requires Manual Review` | Fix failed twice (rolled back) or Confidence: Low - needs human expert |
 | `Partially Mitigated` | Fix reduces but doesn't eliminate the risk |
 | `Accepted Risk` | User explicitly accepted the risk (documented in Phase 3) |
 

@@ -29,7 +29,7 @@ For each data element in the application:
 
 ---
 
-## GDPR Article 35 — Data Protection Impact Assessment (DPIA)
+## GDPR Article 35 - Data Protection Impact Assessment (DPIA)
 
 If the project processes EU personal data, conduct a DPIA:
 
@@ -83,7 +83,7 @@ Check for:
 ### Deletion Verification
 - [ ] When a user requests deletion, is ALL their data removed? (not just the primary record)
 - [ ] Are references in logs, analytics, caches, and search indices also cleaned?
-- [ ] Is deletion from backups addressed? (note: backup deletion is often deferred — document the policy)
+- [ ] Is deletion from backups addressed? (note: backup deletion is often deferred - document the policy)
 - [ ] Are third-party data processors notified of deletion requests?
 
 ---

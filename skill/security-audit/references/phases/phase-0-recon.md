@@ -1,4 +1,4 @@
-# Phase 0 — Recon & Scoping
+# Phase 0 - Recon & Scoping
 
 _The foundation. Everything downstream depends on getting this right. Hold `references/rules.md`._
 
@@ -16,9 +16,9 @@ sbom.cdx.json             raw/                     security-audit-report.md
                                                    hardening-recommendations.md
 ```
 
-Offer to add `.security-audit/` to `.gitignore` — it records exploit detail and secret locations.
+Offer to add `.security-audit/` to `.gitignore` - it records exploit detail and secret locations.
 
-**Create directories lazily, not up front.** Don't `mkdir` `raw/` or `security-tests/` in Phase 0 "just in case" — create each one the moment you're about to write its first file, and only if that phase actually produces something (no scanners installed → nothing lands in `raw/`; no PoC scripts needed → nothing lands in `security-tests/`). A workspace left with empty subfolders reads as unfinished work to the user; every folder present should have something in it.
+**Create directories lazily, not up front.** Don't `mkdir` `raw/` or `security-tests/` in Phase 0 "just in case" - create each one the moment you're about to write its first file, and only if that phase actually produces something (no scanners installed → nothing lands in `raw/`; no PoC scripts needed → nothing lands in `security-tests/`). A workspace left with empty subfolders reads as unfinished work to the user; every folder present should have something in it.
 
 ---
 
@@ -37,7 +37,7 @@ State the scope back to the user in one line and proceed. Do not block on this u
 
 ## Step 1: Profile the Project
 
-Walk the tree. Do not assume — read the manifests and the entry points.
+Walk the tree. Do not assume - read the manifests and the entry points.
 
 | Dimension | What to determine |
 |---|---|
@@ -53,7 +53,7 @@ Walk the tree. Do not assume — read the manifests and the entry points.
 
 Write to `.security-audit/project-profile.md` using `references/templates/project-profile-template.md`.
 
-**Sensitive-data note:** if the project handles payment, health, or EU personal data, flag it now — it changes severity weighting and may pull in `references/compliance/`.
+**Sensitive-data note:** if the project handles payment, health, or EU personal data, flag it now - it changes severity weighting and may pull in `references/compliance/`.
 
 ---
 
@@ -110,7 +110,7 @@ git log -p -G"(?i)(password|secret|api[_-]?key|token|private[_-]?key|BEGIN RSA)"
 
 Also check whether these were ever committed: `.env` variants, cloud credential files, `.pem` / `.p12` / `.keystore`, CI config with inline secrets.
 
-**Record location and secret type only — never the value.** If a live secret is found, tell the user immediately and recommend rotation. Rewriting history is not sufficient once a secret has been pushed.
+**Record location and secret type only - never the value.** If a live secret is found, tell the user immediately and recommend rotation. Rewriting history is not sufficient once a secret has been pushed.
 
 ---
 
@@ -133,9 +133,9 @@ Build `.security-audit/data-flow-inventory.md` from `references/templates/data-f
 Build `.security-audit/threat-model.md` from `references/templates/threat-model-template.md`:
 
 1. **Mermaid data-flow diagram** matching the real architecture
-2. **Trust boundaries** — every point where trusted meets untrusted
-3. **Assets** — what is actually worth stealing or breaking here
-4. **Threat actors** — unauthenticated internet, authenticated low-privilege user, insider, supply chain, compromised dependency. Which are realistic for *this* project?
+2. **Trust boundaries** - every point where trusted meets untrusted
+3. **Assets** - what is actually worth stealing or breaking here
+4. **Threat actors** - unauthenticated internet, authenticated low-privilege user, insider, supply chain, compromised dependency. Which are realistic for *this* project?
 5. **STRIDE matrix** across all six categories
 
 Keep it proportional. A CLI tool does not need a twelve-actor threat model.
@@ -156,7 +156,7 @@ Fallback: parse manifests into CycloneDX using `references/templates/sbom-templa
 
 Run available SCA tools, then apply the **CVE Verification Protocol** in `rules.md` section 5. Never recall a CVE from memory.
 
-Note **reachability** where you can. A CVE in a package you import but never call on a reachable path is real but lower priority — say so rather than inflating severity.
+Note **reachability** where you can. A CVE in a package you import but never call on a reachable path is real but lower priority - say so rather than inflating severity.
 
 If the user wants exploit-likelihood prioritization, enrich with EPSS and CISA KEV via `references/threat-intel.md`.
 
@@ -180,13 +180,13 @@ Most real projects match several. A typical SaaS web app is `web-api` + `auth-id
 
 ## Gate to Proceed
 
-**Proportional, not all-or-nothing.** Per `rules.md` §9, an audit that overstates its coverage is worse than a short one — so scale these artifacts to the target. The first two are always required; the rest are strong defaults you may compress for a small, single-service, low-sensitivity codebase **as long as you record what you compressed and why** (one line in `project-profile.md`). A CLI tool does not need a formal `threat-model.md` with a mermaid diagram; a payment system does. Skipping an artifact silently is the failure mode — noting "SBOM: single manifest, enumerated inline; no separate sbom.cdx.json" is fine.
+**Proportional, not all-or-nothing.** Per `rules.md` §9, an audit that overstates its coverage is worse than a short one - so scale these artifacts to the target. The first two are always required; the rest are strong defaults you may compress for a small, single-service, low-sensitivity codebase **as long as you record what you compressed and why** (one line in `project-profile.md`). A CLI tool does not need a formal `threat-model.md` with a mermaid diagram; a payment system does. Skipping an artifact silently is the failure mode - noting "SBOM: single manifest, enumerated inline; no separate sbom.cdx.json" is fine.
 
-- [ ] Scope and authorization recorded — **required**
-- [ ] `project-profile.md` complete, including the tooling matrix — **required**
+- [ ] Scope and authorization recorded - **required**
+- [ ] `project-profile.md` complete, including the tooling matrix - **required**
 - [ ] Entry points and data flows mapped (`data-flow-inventory.md`, or inline for a tiny surface)
-- [ ] `threat-model.md` written — proportional; compress for simple targets
+- [ ] `threat-model.md` written - proportional; compress for simple targets
 - [ ] `dependency-cve-report.md` written
-- [ ] `sbom.cdx.json` generated — or manifest enumerated inline for a single-manifest project
+- [ ] `sbom.cdx.json` generated - or manifest enumerated inline for a single-manifest project
 - [ ] Domain guides selected and recorded
 - [ ] Anything compressed above is recorded with a one-line reason

@@ -1,6 +1,6 @@
 # Data Flow Inventory
 
-_Generated during Phase 0. Maps every untrusted input source to every dangerous execution sink, with the intermediate call chain. This is the attack surface contract — Phase 1 walks this map systematically rather than free-reading files._
+_Generated during Phase 0. Maps every untrusted input source to every dangerous execution sink, with the intermediate call chain. This is the attack surface contract - Phase 1 walks this map systematically rather than free-reading files._
 
 ---
 
@@ -8,7 +8,7 @@ _Generated during Phase 0. Maps every untrusted input source to every dangerous 
 
 1. Start from the entry points identified in `project-profile.md`
 2. For each entry point, trace the data through function calls, middleware, and transformations
-3. Identify where the data reaches a "sink" — a function that executes, queries, renders, writes, or transmits
+3. Identify where the data reaches a "sink" - a function that executes, queries, renders, writes, or transmits
 4. Record the full chain: Source → Handler → [Intermediate Functions] → Sink
 5. Note which sanitizers/validators exist along the path (or flag their absence)
 
@@ -52,12 +52,12 @@ _Generated during Phase 0. Maps every untrusted input source to every dangerous 
 <!-- For each flow, document the full chain. Use this format: -->
 
 ### Flow [N]: [Short Description]
-- **Source:** [Category] — [specific location, e.g., `POST /api/login` body parameter `username`]
+- **Source:** [Category] - [specific location, e.g., `POST /api/login` body parameter `username`]
 - **Handler:** [file:function:line, e.g., `src/routes/auth.py:login_handler:45`]
 - **Intermediate Steps:**
-  1. [file:function:line] — [what happens to the data: validated? transformed? passed through?]
-  2. [file:function:line] — [next step]
-- **Sink:** [Category] — [specific location, e.g., `src/db/queries.py:find_user:12` — SQL query]
+  1. [file:function:line] - [what happens to the data: validated? transformed? passed through?]
+  2. [file:function:line] - [next step]
+- **Sink:** [Category] - [specific location, e.g., `src/db/queries.py:find_user:12` - SQL query]
 - **Sanitization Present:** Yes / No / Partial
 - **Sanitization Details:** [If yes, what sanitization: parameterized query? regex validation? allowlist?]
 - **Risk Assessment:** [If no sanitization: what vulnerability class does this expose?]

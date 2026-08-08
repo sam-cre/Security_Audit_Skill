@@ -1,4 +1,4 @@
-# Phase 6 — Continuous Security & Regression Prevention
+# Phase 6 - Continuous Security & Regression Prevention
 
 _Load this after Phase 5 is complete. Also load `.security-audit/audit-checklist.md`._
 
@@ -101,7 +101,7 @@ pre-commit install
 Recommend the user tag the current commit as a baseline for future differential audits:
 
 ```bash
-git tag -a security-audit-v1 -m "Security audit completed YYYY-MM-DD — N findings, M resolved"
+git tag -a security-audit-v1 -m "Security audit completed YYYY-MM-DD - N findings, M resolved"
 ```
 
 If this is a re-audit, increment the version number (`security-audit-v2`, etc.).

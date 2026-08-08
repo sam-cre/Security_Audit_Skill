@@ -4,12 +4,12 @@ _Load this during Phase 1 when auditing Solidity smart contracts, DeFi protocols
 
 ---
 
-## SC01 — Reentrancy
+## SC01 - Reentrancy
 
 ### Classic Reentrancy
 - External calls (`call`, `send`, `transfer`) made before state updates, allowing the callee to re-enter the function
 - Pattern: `contract.call{value: amount}("")` before `balances[msg.sender] -= amount`
-- **Fix pattern:** Checks-Effects-Interactions — update state before external calls, or use `ReentrancyGuard`
+- **Fix pattern:** Checks-Effects-Interactions - update state before external calls, or use `ReentrancyGuard`
 
 ### Cross-Function Reentrancy
 - State shared across multiple functions where one function's external call allows re-entry into a different function
@@ -17,7 +17,7 @@ _Load this during Phase 1 when auditing Solidity smart contracts, DeFi protocols
 
 ---
 
-## SC02 — Access Control & Authorization
+## SC02 - Access Control & Authorization
 
 ### Owner/Admin Privilege
 - Missing `onlyOwner`, `onlyRole`, or access control modifier on sensitive functions (mint, pause, withdraw, upgrade)
@@ -31,7 +31,7 @@ _Load this during Phase 1 when auditing Solidity smart contracts, DeFi protocols
 
 ---
 
-## SC03 — Logic Errors & Business Logic
+## SC03 - Logic Errors & Business Logic
 
 ### Arithmetic
 - Integer overflow/underflow (in Solidity < 0.8.0 without SafeMath)
@@ -40,13 +40,13 @@ _Load this during Phase 1 when auditing Solidity smart contracts, DeFi protocols
 
 ### Business Logic
 - Flash loan attack vectors (borrow → manipulate → profit → repay in single transaction)
-- Front-running / MEV (Miner Extractable Value) — transactions visible in mempool before execution
+- Front-running / MEV (Miner Extractable Value) - transactions visible in mempool before execution
 - Sandwich attacks on DEX swaps
 - Price oracle manipulation (single-source oracle, spot price reliance)
 
 ---
 
-## SC04 — Unchecked External Calls
+## SC04 - Unchecked External Calls
 
 - Return value of `call`, `send`, `delegatecall` not checked
 - Failed external calls that silently continue execution
@@ -55,7 +55,7 @@ _Load this during Phase 1 when auditing Solidity smart contracts, DeFi protocols
 
 ---
 
-## SC05 — Denial of Service
+## SC05 - Denial of Service
 
 - Gas limit vulnerabilities in unbounded loops (iterating over growing arrays)
 - Block gas limit exploits via expensive operations
@@ -64,7 +64,7 @@ _Load this during Phase 1 when auditing Solidity smart contracts, DeFi protocols
 
 ---
 
-## SC06 — Proxy & Upgrade Vulnerabilities
+## SC06 - Proxy & Upgrade Vulnerabilities
 
 - Storage collision between proxy and implementation contracts
 - Uninitialized implementation contracts allowing takeover
@@ -74,7 +74,7 @@ _Load this during Phase 1 when auditing Solidity smart contracts, DeFi protocols
 
 ---
 
-## SC07 — Oracle & Data Feed Security
+## SC07 - Oracle & Data Feed Security
 
 - Single-source price oracles easily manipulated
 - Spot price reliance without TWAP (Time-Weighted Average Price)
@@ -83,7 +83,7 @@ _Load this during Phase 1 when auditing Solidity smart contracts, DeFi protocols
 
 ---
 
-## SC08 — Token & Protocol Standards
+## SC08 - Token & Protocol Standards
 
 - ERC-20: Missing return value handling, fee-on-transfer token incompatibility, rebasing token incompatibility
 - ERC-721/1155: Missing `onERC721Received` / `onERC1155Received` callbacks
@@ -92,7 +92,7 @@ _Load this during Phase 1 when auditing Solidity smart contracts, DeFi protocols
 
 ---
 
-## SC09 — Cross-Chain Bridge Security
+## SC09 - Cross-Chain Bridge Security
 
 - Message replay attacks across chains
 - Missing chain ID validation
@@ -102,7 +102,7 @@ _Load this during Phase 1 when auditing Solidity smart contracts, DeFi protocols
 
 ---
 
-## SC10 — Cryptographic Issues
+## SC10 - Cryptographic Issues
 
 - Weak randomness from `block.timestamp`, `block.difficulty`, `blockhash` (predictable by miners)
 - Missing commit-reveal schemes for on-chain randomness

@@ -7,7 +7,7 @@ _Load this during Phase 1 when auditing Dockerfiles, Kubernetes manifests, Terra
 ## 1. Container Security (Dockerfiles)
 
 ### Image Security
-- **Root User:** Missing `USER` instruction — container process running as `root`
+- **Root User:** Missing `USER` instruction - container process running as `root`
 - **Unpinned Images:** Using `:latest` tags without SHA256 digests (`FROM node:latest` → `FROM node:20-slim@sha256:...`)
 - **Bloated Images:** Using full OS images instead of slim/distroless/scratch
 - **Secrets in Build Layers:** Hardcoding API keys, private keys, or passwords in `ENV`, `ARG`, or `RUN` instructions (persist in layer history even if deleted in later layers)
@@ -37,7 +37,7 @@ _Load this during Phase 1 when auditing Dockerfiles, Kubernetes manifests, Terra
   - `capabilities: drop: ["ALL"]`
 - Missing Seccomp / AppArmor profiles
 - `hostNetwork: true`, `hostPID: true`, or `hostIPC: true` without justification
-- Missing resource limits (`resources.limits.cpu`, `resources.limits.memory`) — DoS risk
+- Missing resource limits (`resources.limits.cpu`, `resources.limits.memory`) - DoS risk
 
 ### Network Policies
 - Missing NetworkPolicy resources (all pods can communicate by default)
@@ -45,7 +45,7 @@ _Load this during Phase 1 when auditing Dockerfiles, Kubernetes manifests, Terra
 - Missing egress restrictions (pods can reach internet, cloud metadata)
 
 ### Secrets Management
-- Kubernetes Secrets stored as base64 (not encrypted) — readable by anyone with API access
+- Kubernetes Secrets stored as base64 (not encrypted) - readable by anyone with API access
 - Missing encryption at rest for etcd
 - Secrets mounted as environment variables (visible in process listing) instead of volume files
 

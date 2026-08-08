@@ -8,8 +8,8 @@ The defining failure of microservice security is **assuming the network is trust
 
 ## 1. Service-to-Service Authentication
 
-- Internal endpoints with no authentication because they are "not exposed" — an SSRF or a pod compromise makes them exposed
-- Trusting a header the gateway sets (`X-User-Id`, `X-Roles`, `X-Tenant`) without verifying the request came from the gateway — a client that reaches the service directly spoofs it
+- Internal endpoints with no authentication because they are "not exposed" - an SSRF or a pod compromise makes them exposed
+- Trusting a header the gateway sets (`X-User-Id`, `X-Roles`, `X-Tenant`) without verifying the request came from the gateway - a client that reaches the service directly spoofs it
 - Shared static API key across all services, so compromising one grants all
 - mTLS terminated at the mesh but the application also accepting plaintext on another port
 - Service identity derived from source IP or DNS name, both spoofable inside a flat network
@@ -21,7 +21,7 @@ The defining failure of microservice security is **assuming the network is trust
 - Original user JWT forwarded downstream but **not re-validated** at each hop
 - Token exchanged for a more privileged internal token with no scope narrowing
 - Downstream service trusting claims that an intermediate service could have modified
-- Long-lived internal tokens with no audience restriction — usable against any service
+- Long-lived internal tokens with no audience restriction - usable against any service
 - Token forwarded to a third-party or external service by accident
 - No correlation between the user identity and the action recorded downstream, so audit logs cannot attribute
 
@@ -29,14 +29,14 @@ The defining failure of microservice security is **assuming the network is trust
 
 - Routes reachable directly on the service port, bypassing the gateway's authn, rate limiting, and WAF
 - Gateway rate limits and body-size limits not replicated at the service
-- Path normalization mismatch between gateway and service — `/admin/..;/` or double-encoded paths routed differently by each, defeating gateway ACLs
+- Path normalization mismatch between gateway and service - `/admin/..;/` or double-encoded paths routed differently by each, defeating gateway ACLs
 - Gateway allowlist by path prefix while the service exposes additional routes under it
 - Admin/actuator/debug endpoints (`/actuator`, `/metrics`, `/debug/pprof`, `/health` with detail) exposed without auth
 - Service mesh sidecar bypassable via `hostNetwork`, or traffic to ports the mesh does not capture
 
 ## 4. Network Policy & Segmentation
 
-- Default-allow east-west traffic — any pod can reach any service
+- Default-allow east-west traffic - any pod can reach any service
 - No `NetworkPolicy` or an overly broad one; namespaces not isolated
 - Databases and caches reachable from every service rather than only their owner
 - Management planes (Redis, Elasticsearch, Kafka, etcd, RabbitMQ admin) bound to `0.0.0.0` with default or no auth
@@ -45,7 +45,7 @@ The defining failure of microservice security is **assuming the network is trust
 ## 5. Message Queues & Event Streams
 
 - No authentication or ACLs on Kafka, RabbitMQ, NATS, SQS, or Pub/Sub topics
-- Any service able to publish to any topic — a compromised low-privilege service forges high-privilege events
+- Any service able to publish to any topic - a compromised low-privilege service forges high-privilege events
 - Message payloads not integrity-protected, so a broker compromise lets messages be rewritten
 - Consumers trusting message content as pre-validated because "it came from inside"
 - Unsafe deserialization of message payloads (language-native object formats rather than a schema)
@@ -70,7 +70,7 @@ In a cluster, SSRF is far more severe than on a monolith.
 - Any user-controlled URL fetched by a service reaches internal services, the cloud metadata endpoint, and the Kubernetes API
 - Metadata endpoints not blocked: `169.254.169.254`, `metadata.google.internal`, `100.100.100.200`
 - No allowlist on outbound destinations; redirects followed without re-validating the target
-- DNS rebinding not considered — validation and fetch resolve the name twice
+- DNS rebinding not considered - validation and fetch resolve the name twice
 - Link-local, loopback, and RFC1918 ranges not blocked, including IPv6 equivalents
 
 ## 8. Service Discovery & Configuration
@@ -105,7 +105,7 @@ In a cluster, SSRF is far more severe than on a monolith.
 - No circuit breaker, so one slow dependency takes down the fleet
 - Distributed transaction or saga with a compensating action that can be skipped, leaving the system in a profitable-to-attacker state
 - Non-idempotent operations exposed to at-least-once delivery
-- Eventual consistency used for an authorization decision — check on stale data, act on fresh
+- Eventual consistency used for an authorization decision - check on stale data, act on fresh
 
 ## 12. Multi-Tenancy Across Services
 

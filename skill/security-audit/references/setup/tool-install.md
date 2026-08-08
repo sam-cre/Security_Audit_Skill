@@ -2,7 +2,7 @@
 
 _Read when scanners are missing and the user wants real coverage, or when invoked as `/security-audit setup`._
 
-Scanners raise audit quality substantially — they catch known-pattern bugs cheaply, freeing reasoning for logic flaws they cannot see. But an audit without them is still valid; it just carries a coverage caveat.
+Scanners raise audit quality substantially - they catch known-pattern bugs cheaply, freeing reasoning for logic flaws they cannot see. But an audit without them is still valid; it just carries a coverage caveat.
 
 ---
 
@@ -18,7 +18,7 @@ Scanners raise audit quality substantially — they catch known-pattern bugs che
 
 ## Tiers
 
-**Core Four — covers ~80% of automated value. Recommend these unless the user wants more.**
+**Core Four - covers ~80% of automated value. Recommend these unless the user wants more.**
 
 | Tool | Catches | Why it earns its place |
 |---|---|---|
@@ -27,9 +27,9 @@ Scanners raise audit quality substantially — they catch known-pattern bugs che
 | `gitleaks` | Committed secrets across full git history | Finds what HEAD-only review misses |
 | `osv-scanner` | Dependency CVEs from the OSV database | Authoritative, cross-ecosystem, complements Trivy |
 
-**Language add-ons — only for languages actually in the project:** `bandit` (Python), `gosec` (Go), `cargo-audit` (Rust), `brakeman` (Rails), `npm audit` (built in), `hadolint` (Dockerfiles).
+**Language add-ons - only for languages actually in the project:** `bandit` (Python), `gosec` (Go), `cargo-audit` (Rust), `brakeman` (Rails), `npm audit` (built in), `hadolint` (Dockerfiles).
 
-**Deep tier — only for `deep` mode or dedicated infra work:** `checkov` (IaC), `syft` (SBOM), `nuclei` (DAST), `trufflehog` (deeper secret verification).
+**Deep tier - only for `deep` mode or dedicated infra work:** `checkov` (IaC), `syft` (SBOM), `nuclei` (DAST), `trufflehog` (deeper secret verification).
 
 ---
 
@@ -69,7 +69,7 @@ go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
 
 **Windows caveats worth stating up front:**
 - **Semgrep** has limited native Windows support. If it misbehaves, run it under WSL2 or Docker: `docker run --rm -v "${PWD}:/src" semgrep/semgrep semgrep scan --config=auto /src`
-- **PATH** — after `go install`, ensure `%USERPROFILE%\go\bin` is on PATH. After `pip install --user`, ensure the Python Scripts directory is too.
+- **PATH** - after `go install`, ensure `%USERPROFILE%\go\bin` is on PATH. After `pip install --user`, ensure the Python Scripts directory is too.
 - **Restart the shell** after any PATH change or the tool will appear missing.
 - Some scanners emit CRLF-sensitive output; prefer JSON output flags everywhere.
 
@@ -122,7 +122,7 @@ Run after installing. Every line should print a version.
 semgrep --version && trivy --version && gitleaks version && osv-scanner --version
 ```
 
-The bundled scripts `references/setup/bootstrap-tools.ps1` (Windows) and `bootstrap-tools.sh` (POSIX) automate the Core Four plus verification. **Read the script to the user before running it** — never execute an install script they have not seen.
+The bundled scripts `references/setup/bootstrap-tools.ps1` (Windows) and `bootstrap-tools.sh` (POSIX) automate the Core Four plus verification. **Read the script to the user before running it** - never execute an install script they have not seen.
 
 ---
 
@@ -132,8 +132,8 @@ Update the tooling matrix in `.security-audit/project-profile.md`:
 
 | Tool | Status | Version | Fallback in use |
 |---|---|---|---|
-| semgrep | Installed | 1.x | — |
-| trivy | Installed | 0.x | — |
-| gitleaks | Missing | — | git-history-scan script + entropy sweep |
+| semgrep | Installed | 1.x | - |
+| trivy | Installed | 0.x | - |
+| gitleaks | Missing | - | git-history-scan script + entropy sweep |
 
 Whatever remains missing goes in the report's Coverage section. Never imply coverage you did not have.

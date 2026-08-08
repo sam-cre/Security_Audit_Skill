@@ -36,7 +36,7 @@ _Load this during Phase 1 when auditing game clients, game servers, multiplayer 
 ### Desync & Exploitation
 - Client-server desynchronization exploitable for duplication glitches
 - Rollback/netcode exploits allowing players to "undo" damage or losses
-- Lag switching — intentional latency manipulation for advantage
+- Lag switching - intentional latency manipulation for advantage
 - Position interpolation exploits (rubber-banding abuse)
 
 ### Server Authority

@@ -67,24 +67,6 @@ Most projects load two to four.
 - Every finding requires a source-to-sink trace and a concrete exploit scenario. Confidence is rated High/Medium/Low; Low is never auto-fixed.
 - Reports state what was reviewed, what was skipped, and which scanners were unavailable.
 
-## Layout
-
-```
-skill/security-audit/          the portable skill (what gets installed)
-├── SKILL.md                   entry point: modes, phases, domain router
-└── references/
-    ├── rules.md          confidence, CVSS, CVE, safety rules
-    ├── phases/           9 phase files
-    ├── domains/          14 vulnerability guides
-    ├── templates/        report, threat model, SBOM, SARIF, PoC harnesses
-    ├── setup/            scanner installation
-    ├── scripts/          git-history secret scanning
-    └── compliance/       PCI/SOC2/HIPAA/GDPR/ISO mappings
-install.ps1 / install.sh       installers
-```
+For auditing code you own or are authorized to test. Phase 0 confirms scope before proceeding. Network testing is limited to local/sandboxed targets unless confirmed otherwise.
 
 `AGENTS.md` and `.cursorrules` mirror the same instructions for Codex and Cursor. Those tools don't auto-install; point them at `skill/security-audit/SKILL.md` directly.
-
-## Scope
-
-For auditing code you own or are authorized to test. Phase 0 confirms scope before proceeding. Network testing is limited to local/sandboxed targets unless confirmed otherwise.

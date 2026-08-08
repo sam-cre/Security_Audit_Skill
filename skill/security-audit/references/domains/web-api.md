@@ -4,7 +4,7 @@ _Load this during Phase 1 when auditing Web Applications, REST/GraphQL APIs, mic
 
 ---
 
-## A01:2025 — Broken Access Control
+## A01:2025 - Broken Access Control
 
 _If `auth-identity.md` is also loaded, record access-control findings there and keep this section for the SSRF and mass-assignment patterns below. Do not file the same issue twice._
 
@@ -30,7 +30,7 @@ _If `auth-identity.md` is also loaded, record access-control findings there and 
 
 ---
 
-## A02:2025 — Security Misconfiguration
+## A02:2025 - Security Misconfiguration
 
 ### Server & Framework Misconfig
 - Debug mode enabled in production (`DEBUG=True`, `NODE_ENV=development`)
@@ -52,7 +52,7 @@ _If `auth-identity.md` is also loaded, record access-control findings there and 
 
 ---
 
-## A03:2025 — Software Supply Chain Failures
+## A03:2025 - Software Supply Chain Failures
 
 ### Dependency Vulnerabilities
 - Known CVEs in direct or transitive dependencies
@@ -72,7 +72,7 @@ _If `auth-identity.md` is also loaded, record access-control findings there and 
 
 ---
 
-## A04:2025 — Cryptographic Failures
+## A04:2025 - Cryptographic Failures
 
 ### Weak Hashing
 - MD5/SHA1 for password hashing (use bcrypt, scrypt, argon2id)
@@ -91,7 +91,7 @@ _If `auth-identity.md` is also loaded, record access-control findings there and 
 
 ---
 
-## A05:2025 — Injection
+## A05:2025 - Injection
 
 ### SQL Injection
 - String concatenation or format strings in query execution (`f"SELECT * FROM users WHERE id = {user_input}"`)
@@ -113,7 +113,7 @@ _If `auth-identity.md` is also loaded, record access-control findings there and 
 
 ---
 
-## A06:2025 — Insecure Design
+## A06:2025 - Insecure Design
 
 ### Business Logic Flaws
 - Missing rate limiting on expensive operations (login, search, export)
@@ -123,15 +123,15 @@ _If `auth-identity.md` is also loaded, record access-control findings there and 
 
 ---
 
-## A07:2025 — Authentication Failures
+## A07:2025 - Authentication Failures
 
-**Covered in depth by `references/domains/auth-identity.md`.** Load it whenever the project has login, sessions, tokens, SSO, roles, or multi-tenancy — which is nearly every web app. It covers password storage, login flow, sessions, JWT, OAuth/OIDC, SAML, MFA, password reset, and the authorization model.
+**Covered in depth by `references/domains/auth-identity.md`.** Load it whenever the project has login, sessions, tokens, SSO, roles, or multi-tenancy - which is nearly every web app. It covers password storage, login flow, sessions, JWT, OAuth/OIDC, SAML, MFA, password reset, and the authorization model.
 
 Do not duplicate those findings here. If the project genuinely has no authentication, record that as an architectural observation and move on.
 
 ---
 
-## A08:2025 — Software & Data Integrity Failures
+## A08:2025 - Software & Data Integrity Failures
 
 ### Deserialization
 - Unsafe deserialization of untrusted data (`pickle.loads()`, `yaml.load()`, `JSON.parse()` + `eval()`)
@@ -143,7 +143,7 @@ Do not duplicate those findings here. If the project genuinely has no authentica
 
 ---
 
-## A09:2025 — Security Logging & Alerting Failures
+## A09:2025 - Security Logging & Alerting Failures
 
 - Sensitive data logged (passwords, tokens, PII, credit cards)
 - Authentication failures not logged
@@ -152,7 +152,7 @@ Do not duplicate those findings here. If the project genuinely has no authentica
 
 ---
 
-## A10:2025 — Mishandling of Exceptional Conditions
+## A10:2025 - Mishandling of Exceptional Conditions
 
 - Unhandled exceptions exposing internal state (stack traces, DB errors, file paths)
 - Fail-open behavior on error (auth succeeds if auth service is down)

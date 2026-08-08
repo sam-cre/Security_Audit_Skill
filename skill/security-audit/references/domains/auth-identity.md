@@ -8,12 +8,12 @@ Auth bugs are the highest-severity findings in most applications and scanners ar
 
 ## 1. Password Storage
 
-- MD5, SHA-1, SHA-256, or any fast hash used for passwords — must be **argon2id**, **scrypt**, or **bcrypt**
+- MD5, SHA-1, SHA-256, or any fast hash used for passwords - must be **argon2id**, **scrypt**, or **bcrypt**
 - Missing per-user salt, or a shared/static salt
 - Work factor too low (bcrypt cost < 12, argon2 memory < 19 MiB) or unchanged since 2015
 - Hand-rolled key derivation instead of a vetted library
 - Password compared with `==` instead of a constant-time comparison
-- bcrypt's 72-byte truncation not handled — long passwords silently equivalent
+- bcrypt's 72-byte truncation not handled - long passwords silently equivalent
 - No rehash-on-login when the work factor is raised
 - Password or hash written to logs, error messages, or analytics
 
@@ -22,7 +22,7 @@ Auth bugs are the highest-severity findings in most applications and scanners ar
 - No rate limiting, or rate limiting keyed only on IP (trivially bypassed with a proxy pool)
 - **User enumeration:** different message, status code, or *response time* for unknown user versus wrong password
 - No account lockout or progressive delay after repeated failures
-- No credential-stuffing defense — no breached-password check, no anomaly detection
+- No credential-stuffing defense - no breached-password check, no anomaly detection
 - Login over plaintext HTTP anywhere in the flow
 - Credentials passed in a URL query string (they land in logs, history, and `Referer`)
 - "Remember me" implemented as a long-lived token with no rotation or revocation
@@ -36,7 +36,7 @@ Auth bugs are the highest-severity findings in most applications and scanners ar
 - `SameSite=None` without a justified cross-site need
 - Overly broad cookie `Domain` sharing sessions across untrusted subdomains
 - Session IDs from a non-CSPRNG, or with insufficient entropy (< 128 bits)
-- No absolute session lifetime — only idle timeout, or no timeout at all
+- No absolute session lifetime - only idle timeout, or no timeout at all
 - Sessions stored client-side without integrity protection
 - No way for a user to view or revoke active sessions
 - Concurrent-session limits absent where the threat model requires them
@@ -44,14 +44,14 @@ Auth bugs are the highest-severity findings in most applications and scanners ar
 ## 4. JWT
 
 - `alg: none` accepted
-- **Algorithm confusion** — an RS256 verifier that accepts HS256, letting the public key be used as an HMAC secret
+- **Algorithm confusion** - an RS256 verifier that accepts HS256, letting the public key be used as an HMAC secret
 - Weak, guessable, or default HMAC secret; secret shared across environments
 - Signature not verified at all (`decode` used where `verify` was meant)
 - `exp` missing or not checked; expiry measured in months
 - `aud` and `iss` not validated → token from another service or tenant accepted
-- No revocation path — a stolen token stays valid until expiry, with no denylist or short-lived-token-plus-refresh design
+- No revocation path - a stolen token stays valid until expiry, with no denylist or short-lived-token-plus-refresh design
 - Sensitive data in the payload (it is base64, not encryption)
-- JWT in `localStorage` where any XSS reads it — prefer `HttpOnly` cookies
+- JWT in `localStorage` where any XSS reads it - prefer `HttpOnly` cookies
 - `kid` header used to select a key without validating the value → path traversal or SQL injection into key lookup
 - JWKS fetched over HTTP, or without pinning/caching, allowing key substitution
 
@@ -72,10 +72,10 @@ Auth bugs are the highest-severity findings in most applications and scanners ar
 ## 6. SAML
 
 - Signature not verified, or only the assertion verified while the response is not
-- **XML Signature Wrapping** — attacker adds an unsigned assertion alongside the signed one
+- **XML Signature Wrapping** - attacker adds an unsigned assertion alongside the signed one
 - XXE in the SAML parser (external entities enabled)
 - `NotBefore` / `NotOnOrAfter` / `Recipient` / `Audience` not validated
-- Assertion replay — no `InResponseTo` check, no one-time-use tracking
+- Assertion replay - no `InResponseTo` check, no one-time-use tracking
 - IdP certificate not pinned, or rotation unhandled
 
 ## 7. Multi-Factor Authentication
@@ -95,13 +95,13 @@ Auth bugs are the highest-severity findings in most applications and scanners ar
 The most commonly broken flow in any application. Walk it end to end.
 
 - Reset token predictable, sequential, or non-CSPRNG
-- Token does not expire, or expires far too late (hours to days is too long — 15–60 min)
+- Token does not expire, or expires far too late (hours to days is too long - 15–60 min)
 - Token reusable, or not invalidated after a successful reset
 - Token not bound to the requesting user → use one account's token on another
-- **Host header injection** — reset link built from the `Host` header, letting an attacker point it at their own domain
+- **Host header injection** - reset link built from the `Host` header, letting an attacker point it at their own domain
 - Reset link leaked via `Referer` to third-party scripts on the landing page
 - Old password not required for an in-session password change
-- Sessions not invalidated after a reset — attacker keeps their session
+- Sessions not invalidated after a reset - attacker keeps their session
 - Reset endpoint reveals whether an account exists
 - Email change: no confirmation sent to the **old** address, so a takeover is silent
 - Security questions used as a sole factor (answers are usually public)
@@ -117,11 +117,11 @@ The most commonly broken flow in any application. Walk it end to end.
 
 ## 10. Authorization
 
-- **IDOR / BOLA** — object fetched by user-supplied ID without an ownership check. Test every `:id` route.
-- **BFLA** — admin function reachable by a low-privilege role because the check lives only in the UI
+- **IDOR / BOLA** - object fetched by user-supplied ID without an ownership check. Test every `:id` route.
+- **BFLA** - admin function reachable by a low-privilege role because the check lives only in the UI
 - Authorization checked at the controller but bypassable via a second route, GraphQL resolver, batch endpoint, or internal API
 - Role read from a client-supplied value (request body, JWT claim the client can set, header)
-- **Mass assignment** — `User.update(req.body)` allowing `role`, `is_admin`, `tenant_id`, `balance`
+- **Mass assignment** - `User.update(req.body)` allowing `role`, `is_admin`, `tenant_id`, `balance`
 - Default-allow authorization: a new route with no decorator is public
 - Missing re-authorization on step-up actions (payment, role change, data export)
 - Privilege escalation via self-service role assignment or invitation flows
@@ -131,7 +131,7 @@ The most commonly broken flow in any application. Walk it end to end.
 ## 11. Multi-Tenancy Isolation
 
 - Tenant ID taken from the request instead of derived from the session
-- Queries missing a tenant filter — one omission leaks the whole table
+- Queries missing a tenant filter - one omission leaks the whole table
 - Shared cache keys without a tenant prefix → cross-tenant cache poisoning
 - Background jobs, exports, webhooks, and search indexes running without tenant scoping
 - File storage paths not tenant-isolated
@@ -145,7 +145,7 @@ The most commonly broken flow in any application. Walk it end to end.
 - Service-to-service calls trusting a header (`X-User-Id`) that a client can spoof through the gateway
 - Internal endpoints assumed unreachable rather than authenticated (see `microservices.md`)
 - Webhook receivers not verifying HMAC signatures, or verifying non-constant-time
-- Webhook replay possible — no timestamp check, no nonce
+- Webhook replay possible - no timestamp check, no nonce
 - Long-lived static cloud credentials in CI where OIDC federation is available
 
 ## 13. Account Lifecycle
@@ -161,6 +161,6 @@ The most commonly broken flow in any application. Walk it end to end.
 
 1. **Enumerate every route, then ask what protects it.** Build the list mechanically from the router; do not rely on the code looking protected.
 2. **Find the default.** Is an unannotated route public or private? Default-allow is a systemic finding, not a per-route one.
-3. **Walk each flow end to end** — signup, login, refresh, reset, email change, role change, delete. Bugs hide in the seams between steps.
+3. **Walk each flow end to end** - signup, login, refresh, reset, email change, role change, delete. Bugs hide in the seams between steps.
 4. **Ask what the client controls.** Anything the client sends is attacker-controlled, including headers your gateway adds if the gateway can be bypassed.
 5. **Check both halves of every check.** Read authorized. Write authorized. Same object. Same user.

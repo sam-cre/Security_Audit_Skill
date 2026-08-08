@@ -1,6 +1,6 @@
 # Audit Checklist
 
-_Tailored to this project from threat-model.md and references/rules.md. Only include vulnerability classes that are actually plausible given the attack surface — mark others explicitly N/A with a one-line reason rather than omitting them silently._
+_Tailored to this project from threat-model.md and references/rules.md. Only include vulnerability classes that are actually plausible given the attack surface - mark others explicitly N/A with a one-line reason rather than omitting them silently._
 
 ## Checklist
 

@@ -45,7 +45,7 @@ _Load this during Phase 1 when auditing CLI applications, terminal utilities, sh
 ## 3. Environment Variable Poisoning
 
 ### PATH Manipulation
-- Reliance on `PATH` to resolve executable names — attacker can prepend a malicious binary
+- Reliance on `PATH` to resolve executable names - attacker can prepend a malicious binary
 - Subprocess invocations using short names (`git`, `curl`) instead of absolute paths
 - Missing PATH sanitization before subprocess execution
 
@@ -61,7 +61,7 @@ _Load this during Phase 1 when auditing CLI applications, terminal utilities, sh
 
 ### Subprocess Environment
 - Subprocess invocations that inherit the full parent environment (including secrets)
-- Missing environment scrubbing — pass explicit minimal environment dict instead of inheriting
+- Missing environment scrubbing - pass explicit minimal environment dict instead of inheriting
 
 ---
 

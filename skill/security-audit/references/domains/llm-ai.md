@@ -21,7 +21,7 @@ _Load this during Phase 1 when auditing applications using Large Language Models
 
 ### 3. Excessive Agency & Autonomy
 - Agent systems with overly broad permissions (file system access, network access, code execution)
-- Missing scope boundaries — agent can access data/systems unrelated to the user's task
+- Missing scope boundaries - agent can access data/systems unrelated to the user's task
 - Auto-approval of dangerous actions without user confirmation
 - Missing execution sandboxing for agent-generated code
 - Cascading permissions: inner agent inherits outer agent's full permission set
@@ -61,7 +61,7 @@ _Load this during Phase 1 when auditing applications using Large Language Models
 - Inner agents/sub-agents inheriting full permission sets from parent agents
 - Tool chains where intermediate results grant escalated access
 - Missing principle of least privilege in multi-agent orchestration
-- Agent A calls Agent B which calls Tool C — permission checks only at Agent A level
+- Agent A calls Agent B which calls Tool C - permission checks only at Agent A level
 
 ### 9. MCP (Model Context Protocol) Server Security
 - MCP servers exposing tools without authentication

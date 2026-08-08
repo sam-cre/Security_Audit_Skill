@@ -4,7 +4,7 @@ _Read this during Phase 1 when you need to enrich vulnerability findings with ex
 
 ---
 
-## EPSS — Exploit Prediction Scoring System
+## EPSS - Exploit Prediction Scoring System
 
 EPSS provides a probability score (0.0 to 1.0) indicating how likely a CVE is to be exploited in the wild in the next 30 days. Use this to prioritize remediation.
 
@@ -21,17 +21,17 @@ curl -s "https://api.first.org/data/v1/epss?cve=CVE-2024-XXXXX" | jq '.data[0]'
 ### Interpretation
 | EPSS Score | Interpretation | Remediation Priority |
 |---|---|---|
-| > 0.7 | Very high exploit probability | **Immediate** — treat as if actively exploited |
-| 0.4 – 0.7 | High exploit probability | **Urgent** — fix within 7 days |
-| 0.1 – 0.4 | Moderate exploit probability | **Standard** — fix within 30 days |
-| < 0.1 | Low exploit probability | **Scheduled** — fix within 90 days |
+| > 0.7 | Very high exploit probability | **Immediate** - treat as if actively exploited |
+| 0.4 – 0.7 | High exploit probability | **Urgent** - fix within 7 days |
+| 0.1 – 0.4 | Moderate exploit probability | **Standard** - fix within 30 days |
+| < 0.1 | Low exploit probability | **Scheduled** - fix within 90 days |
 
 ### Integration with CVSS
-EPSS complements CVSS — a Medium-severity CVE with high EPSS (> 0.7) should be prioritized above a High-severity CVE with low EPSS (< 0.1). CVSS measures theoretical impact; EPSS measures real-world likelihood.
+EPSS complements CVSS - a Medium-severity CVE with high EPSS (> 0.7) should be prioritized above a High-severity CVE with low EPSS (< 0.1). CVSS measures theoretical impact; EPSS measures real-world likelihood.
 
 ---
 
-## CISA KEV — Known Exploited Vulnerabilities Catalog
+## CISA KEV - Known Exploited Vulnerabilities Catalog
 
 The CISA KEV catalog lists vulnerabilities **actively being exploited** in the wild. Any CVE on this list is a critical finding regardless of CVSS score.
 

@@ -1,6 +1,6 @@
 # Threat Model (STRIDE Methodology)
 
-_Reasoned from project-profile.md — keep these two documents consistent with each other. Select or adapt the Data Flow Diagram (DFD) matching the project's architecture._
+_Reasoned from project-profile.md - keep these two documents consistent with each other. Select or adapt the Data Flow Diagram (DFD) matching the project's architecture._
 
 ---
 
@@ -145,7 +145,7 @@ graph TD
 <!-- Reasoned from project type: anonymous internet users, authenticated low-privilege users, local non-root users, malicious insiders, supply-chain package hijackers. -->
 
 ## Trust Boundaries
-<!-- Where does trusted code/data meet untrusted input? List explicitly — Phase 1 findings cluster here. -->
+<!-- Where does trusted code/data meet untrusted input? List explicitly - Phase 1 findings cluster here. -->
 
 ## Out of Scope
 <!-- Anything genuinely inapplicable with explicit technical justification (e.g., "No network attack surface: pure offline CLI tool"). -->

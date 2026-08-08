@@ -1,4 +1,4 @@
-# Phase 3 — Remediation Plan & Attack Chain Composition (Approval Gate)
+# Phase 3 - Remediation Plan & Attack Chain Composition (Approval Gate)
 
 _Load this after Phase 2 is complete. Also load `.security-audit/audit-checklist.md` and `.security-audit/security-findings.json`._
 
@@ -42,7 +42,7 @@ After individual findings are scored, attempt to compose multi-step attack narra
 - If **any link** is `Confidence: Low`, the chain is `Confidence: Low` → goes to "Requires Manual Review" section
 
 ### Priority Identification
-For each chain, identify the **cheapest link to break** — the single finding whose fix disrupts the entire chain. This becomes the highest-priority remediation item.
+For each chain, identify the **cheapest link to break** - the single finding whose fix disrupts the entire chain. This becomes the highest-priority remediation item.
 
 Document chains in `.security-audit/security-findings.json` under `attackChains` and in the remediation plan.
 
@@ -54,7 +54,7 @@ Produce a remediation plan ordered **Critical → High → Medium → Low → In
 
 ### For Each Finding
 ```markdown
-### [SEC-XXX] Finding Title — Severity: Critical/High/Medium/Low
+### [SEC-XXX] Finding Title - Severity: Critical/High/Medium/Low
 
 **File/Line:** `path/to/file.ext:123-145`
 **CVSS v4.0:** `CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H` (Score: 8.7)
@@ -62,7 +62,7 @@ Produce a remediation plan ordered **Critical → High → Medium → Low → In
 **Phase 2 PoC Result:** Confirmed Exploitable | Partially Mitigated | Inconclusive
 
 **Risk Explanation:**
-[Tied to Phase 2 PoC evidence — what was proven and what the impact is]
+[Tied to Phase 2 PoC evidence - what was proven and what the impact is]
 
 **Proposed Fix:**
 ```diff
@@ -71,10 +71,10 @@ Produce a remediation plan ordered **Critical → High → Medium → Low → In
 ```
 
 **Regression Risk:**
-[What could break if this fix is applied — dependency changes, behavior changes, performance impact]
+[What could break if this fix is applied - dependency changes, behavior changes, performance impact]
 
 **Remediation SLA:**
-[Based on severity — see references/threat-intel.md for SLA guidelines]
+[Based on severity - see references/threat-intel.md for SLA guidelines]
 ```
 
 ### Separation of Auto-Remediable vs Manual Review

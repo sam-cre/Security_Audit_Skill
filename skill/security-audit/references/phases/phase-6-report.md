@@ -1,4 +1,4 @@
-# Phase 5 — Final Reports & Machine Exports
+# Phase 5 - Final Reports & Machine Exports
 
 _Load this after Phase 4 is complete. Load all Phase 0 context documents to produce the final comprehensive report._
 
@@ -8,7 +8,7 @@ _Load this after Phase 4 is complete. Load all Phase 0 context documents to prod
 
 1. Produce a comprehensive human-readable security audit report
 2. Export machine-readable findings in JSON and SARIF formats
-3. Write for a reviewer who wasn't in the room — the report must stand alone
+3. Write for a reviewer who wasn't in the room - the report must stand alone
 
 ---
 
@@ -35,8 +35,8 @@ Write `.security-audit/security-audit-report.md` using template `references/temp
 5. **Detailed Findings & Remediation Log**
    - Every finding with full schema (file/line, CVSS, CWE, STRIDE, triage evidence, explanation, exploit scenario, PoC result, fix diff, final status)
 
-5b. **Verified-Safe / Assurance** — what you checked that held up
-   - On a well-hardened codebase, *confirming controls work* is most of the audit's value; capture it as a first-class result, not an afterthought. For each significant attack surface or control you examined and found sound, record one line: **the surface, what you verified, and how** (e.g. "Payment integrity — prices resolved server-side from catalog, qty clamped, webhook signature-verified; client cannot tamper price/qty"). This tells the reader what has coverage, distinguishes "checked and solid" from "not looked at," and turns a zero/low-finding audit into evidence of assurance rather than an empty report. Keep it evidence-based — only list surfaces you actually traced.
+5b. **Verified-Safe / Assurance** - what you checked that held up
+   - On a well-hardened codebase, *confirming controls work* is most of the audit's value; capture it as a first-class result, not an afterthought. For each significant attack surface or control you examined and found sound, record one line: **the surface, what you verified, and how** (e.g. "Payment integrity - prices resolved server-side from catalog, qty clamped, webhook signature-verified; client cannot tamper price/qty"). This tells the reader what has coverage, distinguishes "checked and solid" from "not looked at," and turns a zero/low-finding audit into evidence of assurance rather than an empty report. Keep it evidence-based - only list surfaces you actually traced.
 
 6. **Compliance Mapping** (if requested in Phase 0)
    - Finding → CWE → compliance control cross-reference table

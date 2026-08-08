@@ -12,7 +12,7 @@ This repo **is** a skill. `skill/security-audit/` is the portable unit; `install
 
 ```
 skill/security-audit/
-├── SKILL.md                 always loaded — keep it lean
+├── SKILL.md                 always loaded - keep it lean
 └── references/
     ├── rules.md             single source of truth: confidence, CVSS, CVE, safety
     ├── phases/              9 files, phase-0-recon .. phase-8-hardening
@@ -23,22 +23,22 @@ skill/security-audit/
     └── compliance/          framework mappings
 ```
 
-## Invariants — do not break these
+## Invariants - do not break these
 
-**Paths.** Every `references/...` path is relative to the skill directory. This works only because the skill is installed as a *skill*, not as a `.claude/commands/` slash command — commands resolve relative to the CWD, which silently breaks every reference and leaves the model improvising an audit that looks correct. Do not reintroduce a command file.
+**Paths.** Every `references/...` path is relative to the skill directory. This works only because the skill is installed as a *skill*, not as a `.claude/commands/` slash command - commands resolve relative to the CWD, which silently breaks every reference and leaves the model improvising an audit that looks correct. Do not reintroduce a command file.
 
 **No duplication.** Confidence calibration, CVSS guidance, the finding schema, CVE verification, and safety constraints live in `references/rules.md` **only**. Phase files cite sections by number; they must never restate the content. The previous version duplicated all of it inside phase 1, doubling token cost and letting the copies drift.
 
-**Output directory.** Artifacts go to `.security-audit/` in the audited project — never `References/`, which collides case-insensitively with the skill's own `references/` on Windows and macOS.
+**Output directory.** Artifacts go to `.security-audit/` in the audited project - never `References/`, which collides case-insensitively with the skill's own `references/` on Windows and macOS.
 
-**Context discipline.** `SKILL.md` and `rules.md` are the only always-resident files. Every phase file states what to hold and what to release. Content added to `SKILL.md` costs tokens on every invocation — put it in a phase or domain file instead.
+**Context discipline.** `SKILL.md` and `rules.md` are the only always-resident files. Every phase file states what to hold and what to release. Content added to `SKILL.md` costs tokens on every invocation - put it in a phase or domain file instead.
 
 **Scoring integrity.** CVSS v4.0 numeric scores use MacroVector lookup tables and cannot be computed by a language model. The skill emits vector strings and marks scores as calculator-verified or not computed. Do not reintroduce invented decimals.
 
 ## Adding a domain guide
 
 1. Write `references/domains/<name>.md` following the existing shape: numbered categories of concrete patterns, then a short "Reviewing X well" section covering review strategy.
-2. Add a row to the domain router in `SKILL.md` keyed on the **detection signal** — what in the project indicates the guide applies — not just the project type.
+2. Add a row to the domain router in `SKILL.md` keyed on the **detection signal** - what in the project indicates the guide applies - not just the project type.
 3. Re-run the installer.
 4. Verify the router matches disk:
    ```bash

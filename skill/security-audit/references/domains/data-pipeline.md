@@ -8,7 +8,7 @@ _Load this during Phase 1 when auditing ETL pipelines, data ingestion services, 
 
 ### Untrusted Source Injection
 - External data sources (S3 buckets, webhooks, Kafka topics, FTP drops) ingested without schema validation
-- CSV/JSON/XML parsing without sanitization — injection of formulas in CSV (`=SYSTEM("cmd")` in Excel contexts)
+- CSV/JSON/XML parsing without sanitization - injection of formulas in CSV (`=SYSTEM("cmd")` in Excel contexts)
 - XML External Entity (XXE) in XML pipeline parsers
 - Malformed data crashing parsers (null bytes, oversized fields, nested structures)
 
@@ -66,7 +66,7 @@ _Load this during Phase 1 when auditing ETL pipelines, data ingestion services, 
 
 ### Pipeline Tampering
 - Missing checksums or signatures on data in transit between pipeline stages
-- No idempotency guarantees — re-running a pipeline produces different results
+- No idempotency guarantees - re-running a pipeline produces different results
 - Race conditions in concurrent pipeline execution (two jobs writing to same table)
 
 ### Data Quality as Security

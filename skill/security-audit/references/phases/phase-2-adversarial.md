@@ -1,4 +1,4 @@
-# Phase 1.5 — Adversarial Self-Review
+# Phase 1.5 - Adversarial Self-Review
 
 _Load this after Phase 1 is complete. Also load `.security-audit/threat-model.md` and `.security-audit/audit-checklist.md`._
 
@@ -6,7 +6,7 @@ _Load this after Phase 1 is complete. Also load `.security-audit/threat-model.md
 
 ## Objective
 
-Systematically hunt for **false negatives** — vulnerabilities that Phase 1 missed. Phase 1 finds what it's looking for; Phase 1.5 finds what nobody was looking for.
+Systematically hunt for **false negatives** - vulnerabilities that Phase 1 missed. Phase 1 finds what it's looking for; Phase 1.5 finds what nobody was looking for.
 
 ---
 
@@ -15,7 +15,7 @@ Systematically hunt for **false negatives** — vulnerabilities that Phase 1 mis
 For every trust boundary identified in `.security-audit/threat-model.md`:
 
 1. Check whether at least one finding targets it OR an explicit "reviewed, secure" annotation exists
-2. If a trust boundary has zero coverage, it indicates a gap — investigate that boundary specifically
+2. If a trust boundary has zero coverage, it indicates a gap - investigate that boundary specifically
 3. Pay special attention to:
    - Boundaries between different privilege levels (user → admin, service → database)
    - Boundaries between different environments (client → server, internal → external)
@@ -26,7 +26,7 @@ Document coverage status for each boundary:
 | Trust Boundary | Finding(s) | Coverage Status |
 |---|---|---|
 | Client → API Gateway | SEC-001, SEC-003 | Covered |
-| API → Database | (none) | ⚠️ GAP — Investigating |
+| API → Database | (none) | ⚠️ GAP - Investigating |
 | API → External Service | SEC-007 | Covered |
 ```
 
@@ -34,14 +34,14 @@ Document coverage status for each boundary:
 
 ## Lens 2: Human Pentester Simulation
 
-Walk through the application as an attacker would. This is not a code review — this is a **behavioral** review.
+Walk through the application as an attacker would. This is not a code review - this is a **behavioral** review.
 
 ### Authentication Flow Walk-through
-- [ ] Register a new account — what validation exists? Can you register with `admin@company.com`?
-- [ ] Login flow — is brute-force protected? Account lockout? Rate limiting?
-- [ ] Password reset — is the token predictable? Does it expire? Can it be reused?
-- [ ] Session management — are sessions invalidated on password change? On logout?
-- [ ] Token handling — are JWTs validated properly (algorithm, expiry, signature)?
+- [ ] Register a new account - what validation exists? Can you register with `admin@company.com`?
+- [ ] Login flow - is brute-force protected? Account lockout? Rate limiting?
+- [ ] Password reset - is the token predictable? Does it expire? Can it be reused?
+- [ ] Session management - are sessions invalidated on password change? On logout?
+- [ ] Token handling - are JWTs validated properly (algorithm, expiry, signature)?
 
 ### Authorization Flow Walk-through
 - [ ] Access another user's data by modifying IDs in URLs/API requests (IDOR/BOLA)
@@ -71,8 +71,8 @@ Walk through the application as an attacker would. This is not a code review —
 Find places where security depends on conditions that aren't explicitly enforced:
 
 ### Environment Variable Dependencies
-- Security-critical env vars with no fallback — what happens if `JWT_SECRET` is empty?
-- Env vars that change behavior between dev/prod — is `DEBUG=true` possible in production?
+- Security-critical env vars with no fallback - what happens if `JWT_SECRET` is empty?
+- Env vars that change behavior between dev/prod - is `DEBUG=true` possible in production?
 - Env vars that hold secrets but are logged or exposed in error messages
 
 ### Middleware & Configuration Order

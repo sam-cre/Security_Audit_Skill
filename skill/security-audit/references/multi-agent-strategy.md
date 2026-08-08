@@ -12,7 +12,7 @@ Parallelization adds coordination overhead. Only invoke it when at least one of 
 - **≥3 distinct languages** requiring different vulnerability knowledge (e.g., Python backend + TypeScript frontend + Terraform IaC)
 - **Clearly decoupled modules** with separate entry points and minimal shared state (e.g., microservices, monorepo packages)
 
-If the project is small or monolithic, run the full audit single-threaded — parallelization will add confusion without saving time.
+If the project is small or monolithic, run the full audit single-threaded - parallelization will add confusion without saving time.
 
 ---
 
@@ -68,9 +68,9 @@ After all subagents complete Phase 1, the coordinator merges findings:
 3. **Related but distinct:** Same CWE but different files/functions → keep both as separate findings
 
 ### Cross-Module Attack Chain Discovery
-After merging, the coordinator must specifically look for **cross-boundary attack chains** — vulnerabilities in module A that become exploitable because of a weakness in module B. These chains are invisible to individual subagents.
+After merging, the coordinator must specifically look for **cross-boundary attack chains** - vulnerabilities in module A that become exploitable because of a weakness in module B. These chains are invisible to individual subagents.
 
-Example: Agent B finds an SSRF in the API layer. Agent C finds an unprotected internal admin endpoint. Neither flags the combination — the coordinator must compose: "SEC-103 (SSRF) enables unauthenticated access to SEC-201 (unprotected admin endpoint)."
+Example: Agent B finds an SSRF in the API layer. Agent C finds an unprotected internal admin endpoint. Neither flags the combination - the coordinator must compose: "SEC-103 (SSRF) enables unauthenticated access to SEC-201 (unprotected admin endpoint)."
 
 ### Merge Output
 The coordinator produces the unified `audit-checklist.md` and `security-findings.json`, re-numbering findings into a clean sequential order if needed, and proceeds to Phase 2 as a single-threaded process (dynamic tests must run sequentially to avoid interference).
@@ -82,7 +82,7 @@ The coordinator produces the unified `audit-checklist.md` and `security-findings
 When invoking subagents, use this pattern:
 
 ```
-Role: "Security Auditor — [Module Name]"
+Role: "Security Auditor - [Module Name]"
 Prompt: |
   You are conducting Phase 1 static analysis on [module scope].
   
@@ -110,8 +110,8 @@ Prompt: |
 ## Coordinator Responsibilities
 
 The coordinator (parent agent) owns:
-- Phase 0 (recon) — always single-threaded
+- Phase 0 (recon) - always single-threaded
 - Subagent dispatch and context distribution
 - Finding merge and deduplication
 - Cross-module attack chain composition
-- Phases 2–6 — always single-threaded after merge
+- Phases 2–6 - always single-threaded after merge
