@@ -88,6 +88,14 @@ During Phase 0 threat modeling, consider the likely attackers for the project ty
 | Smart contract / DeFi | MEV bots, flash loan attackers, white-hat bounty hunters |
 | Game | Cheat developers, account sellers, currency farmers |
 | AI / LLM app | Prompt injection researchers, data poisoners |
+| Self-hosted / local LLM | Local malware scraping prompts and model RAM, model-supply-chain attackers, LAN attackers reaching an exposed inference port |
+
+> **Self-hosted / local inference** (Ollama, LM Studio, llama.cpp, vLLM, text-generation-webui) has a
+> distinct surface from an app that merely *calls* a hosted LLM API: a localhost inference server that
+> can be bound to `0.0.0.0`, prompt/response logs written to disk in plaintext, untrusted model files
+> (a GGUF/Modelfile can carry a system prompt and pull remote content), and sensitive data sitting in
+> RAM/VRAM during inference. When Phase 0 finds any local inference runtime, load
+> `references/local-llm-inference.md` and cover its checklist.
 
 ---
 
