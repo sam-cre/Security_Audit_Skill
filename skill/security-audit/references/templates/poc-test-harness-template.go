@@ -1,4 +1,4 @@
-// Security Audit PoC Test Harness Template — Phase 2 Dynamic Testing (Go)
+// Security Audit PoC Test Harness Template — Phase 3 Dynamic Testing (Go)
 //
 // A collection of runnable test patterns for Go projects organized by vulnerability class.
 // Copy and adapt these patterns into `.security-audit/security-tests/test_secXXX_poc_test.go`.

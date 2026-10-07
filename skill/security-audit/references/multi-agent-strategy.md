@@ -73,7 +73,7 @@ After merging, the coordinator must specifically look for **cross-boundary attac
 Example: Agent B finds an SSRF in the API layer. Agent C finds an unprotected internal admin endpoint. Neither flags the combination - the coordinator must compose: "SEC-103 (SSRF) enables unauthenticated access to SEC-201 (unprotected admin endpoint)."
 
 ### Merge Output
-The coordinator produces the unified `audit-checklist.md` and `security-findings.json`, re-numbering findings into a clean sequential order if needed, and proceeds to Phase 2 as a single-threaded process (dynamic tests must run sequentially to avoid interference).
+The coordinator produces the unified `audit-checklist.md` and `security-findings.json`, re-numbering findings into a clean sequential order if needed, and proceeds to Phase 2 (adversarial review) and Phase 3 (dynamic tests) as a single-threaded process (dynamic tests must run sequentially to avoid interference).
 
 ---
 

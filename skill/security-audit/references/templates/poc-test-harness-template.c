@@ -1,5 +1,5 @@
 /*
- * Security Audit PoC Test Harness Template — Phase 2 Dynamic Testing (C/C++)
+ * Security Audit PoC Test Harness Template — Phase 3 Dynamic Testing (C/C++)
  *
  * A collection of runnable test patterns for C/C++ codebases targeting memory safety,
  * buffer overflows, format string vulnerabilities, and path traversal.

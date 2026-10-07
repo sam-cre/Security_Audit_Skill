@@ -1,6 +1,6 @@
-# Phase 3 - Remediation Plan & Attack Chain Composition (Approval Gate)
+# Phase 4 - Remediation Plan & Attack Chain Composition (Approval Gate)
 
-_Load this after Phase 2 is complete. Also load `.security-audit/audit-checklist.md` and `.security-audit/security-findings.json`._
+_Load this after Phase 3 is complete. Also load `.security-audit/audit-checklist.md` and `.security-audit/security-findings.json`._
 
 ---
 
@@ -59,10 +59,10 @@ Produce a remediation plan ordered **Critical → High → Medium → Low → In
 **File/Line:** `path/to/file.ext:123-145`
 **CVSS v4.0:** `CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H` (Score: 8.7)
 **Confidence:** High | Medium | Low
-**Phase 2 PoC Result:** Confirmed Exploitable | Partially Mitigated | Inconclusive
+**Phase 3 PoC Result:** Confirmed Exploitable | Partially Mitigated | Inconclusive
 
 **Risk Explanation:**
-[Tied to Phase 2 PoC evidence - what was proven and what the impact is]
+[Tied to Phase 3 PoC evidence - what was proven and what the impact is]
 
 **Proposed Fix:**
 ```diff
@@ -88,7 +88,7 @@ Clearly separate findings into two groups:
 **Group B: Requires Manual Expert Review** (Confidence: Low)
 - Listed separately with reasoning for why auto-remediation is not appropriate
 - Includes suggested investigation steps for the human reviewer
-- These findings are EXCLUDED from Phase 4 auto-remediation
+- These findings are EXCLUDED from Phase 5 auto-remediation
 
 ---
 
@@ -120,8 +120,9 @@ Present the complete remediation plan to the user, then **stop and ask verbatim*
 
 ## Gate to Proceed
 
-Do not advance to Phase 4 until:
+Do not advance to Phase 5 until:
 - [ ] Attack chains have been composed and documented
 - [ ] Remediation plan is prioritized by severity
 - [ ] Compliance mappings are included (if requested)
 - [ ] **Explicit user approval has been received** (YES response)
+- [ ] The plan and the approval (date, and which findings were approved) are recorded in `.security-audit/audit-checklist.md`, so Phase 6 can verify them

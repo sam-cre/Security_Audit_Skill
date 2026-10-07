@@ -1,6 +1,6 @@
 # Compliance Framework Cross-Reference Matrix
 
-_Load this during Phase 3 when compliance framework mapping is requested. Maps CWE categories to specific compliance controls._
+_Load this during Phase 4 when compliance framework mapping is requested. Maps CWE categories to specific compliance controls._
 
 ---
 
@@ -117,16 +117,16 @@ Use ASVS levels to determine the required depth of security verification:
 |---|---|---|
 | **Govern (GV)** | Phase 0 | Risk management, roles, policy |
 | **Identify (ID)** | Phase 0 | Asset inventory, risk assessment, SBOM |
-| **Protect (PR)** | Phase 1, 4, 6, 7 | Access control, encryption, configuration, training |
-| **Detect (DE)** | Phase 1, 1.5, 7 | Anomaly detection, monitoring, logging |
-| **Respond (RS)** | Phase 3, 4, 7 | Incident response, mitigation, communication |
-| **Recover (RC)** | Phase 7 | Recovery planning, improvements |
+| **Protect (PR)** | Phase 1, 5, 7, 8 | Access control, encryption, configuration, training |
+| **Detect (DE)** | Phase 1, 2, 8 | Anomaly detection, monitoring, logging |
+| **Respond (RS)** | Phase 4, 5, 8 | Incident response, mitigation, communication |
+| **Recover (RC)** | Phase 8 | Recovery planning, improvements |
 
 ---
 
 ## Using This Matrix
 
-During Phase 3 remediation planning:
+During Phase 4 remediation planning:
 
 1. For each finding, look up its CWE in the tables above
 2. Map the CWE to the relevant compliance controls

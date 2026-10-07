@@ -1,5 +1,5 @@
 """
-Security Audit PoC Test Harness Library — Phase 2 Dynamic Testing
+Security Audit PoC Test Harness Library — Phase 3 Dynamic Testing
 
 A library of WORKING, RUNNABLE test patterns organized by vulnerability class.
 Each class provides reusable test methods that the agent adapts per-finding.

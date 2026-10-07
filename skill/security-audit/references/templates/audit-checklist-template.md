@@ -39,4 +39,4 @@ _Tailored to this project from threat-model.md and references/rules.md. Only inc
 ## Detailed Findings
 
 <!-- Phase 1 appends detailed findings here as they're discovered using the schema in references/rules.md.
-     Append-only during Phase 1; statuses, CVSS metrics, and PoCs are updated during Phase 2 and Phase 4. -->
+     Append-only during Phase 1; statuses, CVSS metrics, and PoCs are updated during Phase 3 and Phase 5. -->

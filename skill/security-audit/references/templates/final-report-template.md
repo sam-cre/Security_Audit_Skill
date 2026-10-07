@@ -60,7 +60,7 @@
   - Exploit Feasibility: [prerequisites required]
 - **Explanation:**
 - **Exploit Scenario:**
-- **Phase 2 Dynamic PoC Verification:** `.security-audit/security-tests/test_sec001_poc.py` (Verdict: ...)
+- **Phase 3 Dynamic PoC Verification:** `.security-audit/security-tests/test_sec001_poc.py` (Verdict: ...)
 - **Applied Fix Diff:**
 ```diff
 - vulnerable_code()
@@ -98,14 +98,14 @@ _Include this section only for differential re-audits._
 
 ---
 
-## Phase 6 - Continuous Security & CI/CD Guardrail Summary
+## Phase 7 - Continuous Security & CI/CD Guardrail Summary
 - **Custom Semgrep Rules:** Generated in `.semgrep/` directory
 - **CI/CD Security Workflow:** Installed at `.github/workflows/security-audit.yml`
 - **Git Audit Tag:** Recommend running `git tag -a security-audit-vN -m "Audit YYYY-MM-DD"`
 
 ---
 
-## Phase 7 - Infrastructure & Operational Hardening Recommendations
+## Phase 8 - Infrastructure & Operational Hardening Recommendations
 _Actionable external checklist exported to `.security-audit/hardening-recommendations.md`._
 
 | Priority | Category | Action Item | Target Provider / Layer | Status |

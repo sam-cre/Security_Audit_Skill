@@ -42,7 +42,7 @@ Before scanning changed files, read and internalize:
 0. **Schema Version Check:** Compare the `skillVersion` field in the prior `security-findings.json` against the current skill version. If the schema has changed (e.g., new required fields like `complianceMappings` or `triageEvidence` were added), migrate the prior findings to the current schema before merging. Log any fields that were absent in the prior version and backfill with sensible defaults or `null`.
 1. **Prior `security-findings.json`** - understand what was found before, what was fixed, and what was accepted-risk
 2. **Prior `threat-model.md`** - check whether new code introduces new trust boundaries or entry points
-3. **Prior Phase 6 Semgrep rules** - these encode the exact vulnerability patterns previously fixed
+3. **Prior Phase 7 Semgrep rules** - these encode the exact vulnerability patterns previously fixed
 
 ### Carry-Forward Rules
 - **Accepted-risk findings** from the prior audit keep their status unless the code they reference has changed
@@ -60,7 +60,7 @@ Run Phase 1 analysis only on files identified in `diff-scope.md`:
    - Re-check the specific lines that changed (use `git diff` hunk context)
    - Check whether the modification introduces a new instance of a previously-found vulnerability pattern
    - If the file had prior findings, verify the fixes are still intact
-3. **Run prior Phase 6 Semgrep rules** against changed files only:
+3. **Run prior Phase 7 Semgrep rules** against changed files only:
    ```bash
    semgrep --config .semgrep/ --include <changed-files>
    ```
@@ -75,7 +75,7 @@ Continue the ID sequence from the prior audit's highest ID. If the prior audit e
 For every finding marked "Resolved" in the prior `security-findings.json`:
 
 1. Check whether the file/function containing the fix has been modified
-2. If yes: re-run the original Phase 2 PoC harness from `.security-audit/security-tests/`
+2. If yes: re-run the original Phase 3 PoC harness from `.security-audit/security-tests/`
 3. If the PoC now fails (vulnerability has regressed): 
    - Create a new finding with status "Regression" 
    - Escalate severity by one level (a fix that was undone is a process failure, not just a code bug)

@@ -1,6 +1,6 @@
-# Phase 2 - Dynamic Analysis & Executable PoC Harnesses
+# Phase 3 - Dynamic Analysis & Executable PoC Harnesses
 
-_Load this after Phase 1.5 is complete. Also load the language-specific PoC template(s) matching the project's language(s)._
+_Load this after Phase 2 is complete. Also load the language-specific PoC template(s) matching the project's language(s)._
 
 ---
 
@@ -32,6 +32,8 @@ Choose the PoC template matching the project's primary language:
 | **Go** | `references/templates/poc-test-harness-template.go` | Unparameterized SQL, Command Injection, Path Traversal, Goroutine Race Conditions |
 | **Rust** | `references/templates/poc-test-harness-template.rs` | Unsafe Block Safety, Shell Command Injection, Path Traversal |
 | **C/C++** | `references/templates/poc-test-harness-template.c` | Buffer Bounds, Format String, Integer Safety |
+
+No template for the project's language (for example Java, C#, PHP, Ruby, Kotlin, Swift): load the template closest in style, keep its structure (setup, the exploit attempt, an assertion that tells vulnerable from fixed, cleanup), and write the harness in that language's own test framework (JUnit, xUnit, PHPUnit, RSpec, XCTest). Name the template it was adapted from in the harness header. A finding that cannot be exercised from a test (for example a cloud setting) gets a scripted check or a manual verification step instead, and its verdict says so.
 
 ### PoC Rules
 1. **Non-Destructive:** Test for vulnerability presence without causing permanent data destruction
@@ -123,7 +125,7 @@ Update `.security-audit/audit-checklist.md` and `.security-audit/security-findin
 
 ## Gate to Proceed
 
-Do not advance to Phase 3 until:
+Do not advance to Phase 4 until:
 - [ ] Every finding has a test result and verdict
 - [ ] All test scripts exist in `.security-audit/security-tests/`
 - [ ] `audit-checklist.md` and `security-findings.json` are updated with verdicts

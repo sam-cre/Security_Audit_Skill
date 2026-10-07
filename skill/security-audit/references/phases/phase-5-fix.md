@@ -1,13 +1,13 @@
-# Phase 4 - Automated Remediation & Re-Testing
+# Phase 5 - Automated Remediation & Re-Testing
 
-_Load this only after explicit Phase 3 user approval. Also load `.security-audit/audit-checklist.md`._
+_Load this only after explicit Phase 4 user approval. Also load `.security-audit/audit-checklist.md`._
 
 ---
 
 ## Objectives
 
 1. Apply minimal targeted code fixes for each approved finding
-2. Re-run Phase 2 PoC harnesses to verify fixes
+2. Re-run Phase 3 PoC harnesses to verify fixes
 3. Automatically roll back any fix that fails twice
 4. Never leave broken code in the project
 
@@ -17,7 +17,7 @@ _Load this only after explicit Phase 3 user approval. Also load `.security-audit
 
 Before applying any fix:
 
-1. **Verify approval:** Confirm Phase 3 approval was received. If not, STOP.
+1. **Verify approval:** Confirm Phase 4 approval was received. If not, STOP.
 2. **Git status check:** Ensure working directory is clean or stash uncommitted changes:
    ```bash
    git status
@@ -112,13 +112,13 @@ Keep `.security-audit/audit-checklist.md` and `.security-audit/security-findings
 | `Resolved` | Fix applied and PoC harness confirms vulnerability is closed |
 | `Requires Manual Review` | Fix failed twice (rolled back) or Confidence: Low - needs human expert |
 | `Partially Mitigated` | Fix reduces but doesn't eliminate the risk |
-| `Accepted Risk` | User explicitly accepted the risk (documented in Phase 3) |
+| `Accepted Risk` | User explicitly accepted the risk (documented in Phase 4) |
 
 ---
 
 ## Gate to Proceed
 
-Do not advance to Phase 5 until:
+Do not advance to Phase 6 until:
 - [ ] All approved findings have been attempted (fix or skip)
 - [ ] No broken/partial fixes remain in the codebase
 - [ ] All rollbacks have been executed where needed

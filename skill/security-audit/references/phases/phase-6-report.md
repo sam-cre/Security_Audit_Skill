@@ -1,6 +1,6 @@
-# Phase 5 - Final Reports & Machine Exports
+# Phase 6 - Final Reports & Machine Exports
 
-_Load this after Phase 4 is complete. Load all Phase 0 context documents to produce the final comprehensive report._
+_Load this after Phase 5 is complete. Load all Phase 0 context documents to produce the final comprehensive report._
 
 ---
 
@@ -9,6 +9,32 @@ _Load this after Phase 4 is complete. Load all Phase 0 context documents to prod
 1. Produce a comprehensive human-readable security audit report
 2. Export machine-readable findings in JSON and SARIF formats
 3. Write for a reviewer who wasn't in the room - the report must stand alone
+
+---
+
+## Step 0: Verify the Audit Trail Before Writing
+
+The report claims each phase ran. Check that claim against the workspace with a command, not from memory. List `.security-audit/` and confirm each expected file exists and is not empty:
+
+| Phase | Expected output | Required when |
+|---|---|---|
+| 0 | `project-profile.md`, `threat-model.md`, `data-flow-inventory.md` | Always |
+| 0 | `dependency-cve-report.md`, `sbom.cdx.json` | The project has dependencies |
+| 1 | `audit-checklist.md`, `security-findings.json` | Always |
+| 2 | `pentest-methodology.md` with every trust boundary covered or marked reviewed | `standard` and `deep` |
+| 3 | One script in `security-tests/` per finding marked Confirmed or Partially Mitigated | `standard` and `deep` |
+| 4 | The remediation plan and the user's approval, recorded in `audit-checklist.md` | Always (in `quick`, the plan without fixes) |
+| 5 | A status and a Regression-Guard on every approved finding in `audit-checklist.md` | Fixes were approved |
+
+```powershell
+Get-ChildItem .security-audit -Recurse -File | Select-Object Length, FullName
+```
+
+```bash
+find .security-audit -type f -exec ls -l {} +
+```
+
+Also check `security-findings.json` parses and has one entry per finding in `audit-checklist.md`. A missing or empty file means that phase did not finish: go back and finish it, or name the gap in the report's methodology section. Never write a phase summary for a phase with no output.
 
 ---
 
@@ -44,9 +70,9 @@ Write `.security-audit/security-audit-report.md` using template `references/temp
 7. **Differential Audit Delta** (if this is a re-audit)
    - Prior vs. current metrics, regression analysis
 
-8. **Phase 6 Summary** (CI/CD guardrails installed)
+8. **Phase 7 Summary** (CI/CD guardrails installed). `deep` mode only: Phase 7 runs after this report, so write "Not run" here and update the section when Phase 7 finishes
 
-9. **Phase 7 Summary** (infrastructure hardening recommendations)
+9. **Phase 8 Summary** (infrastructure hardening recommendations). Same as above, for Phase 8
 
 10. **Residual Risk & Ongoing Hygiene**
     - Outstanding manual review items
@@ -105,7 +131,7 @@ The report must:
 
 ## Gate to Proceed
 
-Do not advance to Phase 6 until:
+Do not advance to Phase 7 until:
 - [ ] `.security-audit/security-audit-report.md` is complete
 - [ ] `.security-audit/security-findings.json` is valid JSON matching the schema
 - [ ] `.security-audit/security-findings.sarif` is valid SARIF v2.1.0

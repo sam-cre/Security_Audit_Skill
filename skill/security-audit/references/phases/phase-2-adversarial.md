@@ -1,4 +1,4 @@
-# Phase 1.5 - Adversarial Self-Review
+# Phase 2 - Adversarial Self-Review
 
 _Load this after Phase 1 is complete. Also load `.security-audit/threat-model.md` and `.security-audit/audit-checklist.md`._
 
@@ -6,7 +6,7 @@ _Load this after Phase 1 is complete. Also load `.security-audit/threat-model.md
 
 ## Objective
 
-Systematically hunt for **false negatives** - vulnerabilities that Phase 1 missed. Phase 1 finds what it's looking for; Phase 1.5 finds what nobody was looking for.
+Systematically hunt for **false negatives** - vulnerabilities that Phase 1 missed. Phase 1 finds what it's looking for; Phase 2 finds what nobody was looking for.
 
 ---
 
@@ -94,7 +94,7 @@ Find places where security depends on conditions that aren't explicitly enforced
 
 ## Recording Results
 
-Document the adversarial review in `.security-audit/pentest-rules.md` using template `references/templates/pentest-methodology-template.md`.
+Document the adversarial review in `.security-audit/pentest-methodology.md` using template `references/templates/pentest-methodology-template.md`.
 
 Any new findings discovered go into `.security-audit/audit-checklist.md` and `.security-audit/security-findings.json` with the same schema as Phase 1 findings, noting `"Detected By": "Adversarial Self-Review"`.
 
@@ -102,8 +102,8 @@ Any new findings discovered go into `.security-audit/audit-checklist.md` and `.s
 
 ## Gate to Proceed
 
-Do not advance to Phase 2 until:
+Do not advance to Phase 3 until:
 - [ ] Every trust boundary has either a finding or an explicit "reviewed, secure" annotation
 - [ ] All three adversarial lenses have been documented
-- [ ] `.security-audit/pentest-rules.md` is complete
+- [ ] `.security-audit/pentest-methodology.md` is complete
 - [ ] Any new findings are recorded in `audit-checklist.md` and `security-findings.json`

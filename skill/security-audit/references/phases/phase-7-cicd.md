@@ -1,6 +1,6 @@
-# Phase 6 - Continuous Security & Regression Prevention
+# Phase 7 - Continuous Security & Regression Prevention
 
-_Load this after Phase 5 is complete. Also load `.security-audit/audit-checklist.md`._
+_Load this after Phase 6 is complete. Also load `.security-audit/audit-checklist.md`._
 
 ---
 
@@ -15,7 +15,7 @@ _Load this after Phase 5 is complete. Also load `.security-audit/audit-checklist
 
 ## Step 1: Custom Semgrep Rules
 
-Generate rules in the `.semgrep/` directory targeting the exact code patterns remediated during Phase 4.
+Generate rules in the `.semgrep/` directory targeting the exact code patterns remediated during Phase 5.
 
 ### Rule Generation
 For each resolved finding, create a Semgrep rule that would catch the same pattern:
@@ -135,7 +135,7 @@ Recommend Renovate Bot configuration with security-focused auto-merge for patch 
 
 ## Gate to Proceed
 
-Do not advance to Phase 7 until:
+Do not advance to Phase 8 until:
 - [ ] Custom Semgrep rules are generated in `.semgrep/`
 - [ ] CI/CD workflow is generated for the project's platform
 - [ ] Pre-commit hooks are configured (or recommended)
