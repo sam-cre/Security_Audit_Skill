@@ -1,126 +1,52 @@
 # Vulnerability Reference: CLI Tools & Command-Line Utilities
 
-_Load this during Phase 1 when auditing CLI applications, terminal utilities, shell scripts, system wrappers, or developer tooling._
+_Load in Phase 1 for CLI apps, terminal utilities, shell scripts, system wrappers, or developer tooling._
 
 ---
 
 ## 1. Argument & Input Injection
 
-### Argument Injection
-- User-supplied inputs passed as command arguments where flags (e.g., `--config`, `--exec`, `-o`) can alter execution behavior
-- Missing delimiter (`--`) to separate positional arguments from user-controlled flag parameters
-- Shell glob expansion of user input leading to unexpected file matching
+- User input passed as command arguments where flags (`--config`, `--exec`, `-o`) alter behavior; no `--` delimiter between flags and user-controlled positionals
+- Shell glob expansion of user input
+- Piped stdin processed unvalidated or trusted as verified (it may come from a compromised process); no length limit
+- Config path controlled by arguments (`--config /etc/shadow`)
+- Config formats that can execute code (YAML anchors, TOML exec, JSON `$ref`); env-var interpolation in config unsanitized
 
-### Stdin / Pipe Injection
-- Processing piped input without validation or sanitization
-- Trusting data from stdin as if it were user-verified (could come from another compromised process)
-- Missing input length limits on stdin processing
+## 2. Temporary Files
 
-### Configuration Injection
-- Config file paths controlled by user arguments (`--config /etc/shadow`)
-- Config file formats that support code execution (YAML anchors, TOML exec, JSON with `$ref`)
-- Environment variable interpolation in config files without sanitization
+- Predictable paths (`/tmp/app_export.txt`, `/tmp/pid`) without atomic creation (`O_EXCL`/`O_CREAT`); `mktemp` unused or misused
+- TOCTOU between existence check and create
+- Symlink/hardlink attack: attacker pre-creates a symlink in `/tmp` to a sensitive file (`/etc/passwd`, `~/.ssh/authorized_keys`) and the tool overwrites it; no `O_NOFOLLOW`
+- Temp files with secrets not cleaned on SIGTERM, SIGINT, or crash; no signal handlers; world-readable temp dirs left behind
 
----
+## 3. Environment Poisoning
 
-## 2. Unsafe Temporary File Creation
+- **PATH:** executables resolved via `PATH`; subprocesses use short names (`git`, `curl`) not absolute paths; PATH not sanitized
+- **Library loading:** `LD_PRELOAD`, `DYLD_INSERT_LIBRARIES`; `PYTHONPATH`, `RUBYLIB`, `NODE_PATH`, `PERL5LIB` prepending hostile module dirs; Windows DLL search-order hijacking (`PATH`, then current directory, then system)
+- **Config override:** security behavior driven by unvalidated env vars; `HOME`, `XDG_CONFIG_HOME`, `USERPROFILE` redirecting config; `http_proxy`/`HTTPS_PROXY` enabling MITM
+- **Subprocess env:** children inherit the full environment, secrets included. Pass an explicit minimal env.
 
-### Predictable Paths
-- Hardcoded temporary file paths (`/tmp/app_export.txt`, `/tmp/pid`) without atomic creation flags (`O_EXCL` / `O_CREAT`)
-- `mktemp` not used or used incorrectly (missing `-u` flag, missing template)
-- Race condition between checking file existence and creating it (TOCTOU)
+## 4. Privilege & Execution
 
-### Symlink & Hardlink Attacks
-- Attacker pre-creates a symlink in `/tmp` pointing to a sensitive file (`/etc/passwd`, `~/.ssh/authorized_keys`)
-- CLI tool follows the symlink and overwrites the target file
-- Missing `O_NOFOLLOW` flag on file opens in temp directories
+- **SUID/SGID:** no privilege drop before user-controlled work; executes programs without absolute paths; no drop after the privileged step
+- **Sudo wrappers:** user input passed to privileged commands unsanitized; wildcards in sudoers (`/usr/bin/tool *` allows argument injection); missing `--`
+- **Signal/lock races:** handlers leaving sensitive temp files; lock/PID file races; SIGCHLD not reaping children
 
-### Cleanup Failures
-- Temporary files containing secrets not cleaned up on abnormal exit (SIGTERM, SIGINT, crash)
-- Missing signal handlers for graceful cleanup
-- Temp directories left behind with world-readable permissions
+## 5. Output & Logging
 
----
+- ANSI escape injection (`\e]` sequences can run terminal commands), including user data in logs viewed in a terminal; no output sanitization
+- Passwords, tokens, or keys printed to stdout/stderr; debug output with paths, addresses, system info
+- No `--quiet`/`--no-color` for logged CI output
 
-## 3. Environment Variable Poisoning
+## 6. File System
 
-### PATH Manipulation
-- Reliance on `PATH` to resolve executable names - attacker can prepend a malicious binary
-- Subprocess invocations using short names (`git`, `curl`) instead of absolute paths
-- Missing PATH sanitization before subprocess execution
+- Paths not checked for traversal (`../../../etc/passwd`); no canonicalization before access checks
+- Archive extraction without path validation (Zip Slip)
+- Files created with loose modes (0777, world-readable); no umask; symlinks followed in shared directories
 
-### Library Loading
-- `LD_PRELOAD`, `DYLD_INSERT_LIBRARIES` allowing code injection into the process
-- `PYTHONPATH`, `RUBYLIB`, `NODE_PATH`, `PERL5LIB` prepending malicious module directories
-- DLL search order hijacking on Windows (`PATH` → current directory → system)
+## 7. Network (if applicable)
 
-### Configuration Override
-- Security-critical behavior controlled by environment variables without validation
-- `HOME`, `XDG_CONFIG_HOME`, `USERPROFILE` manipulation to redirect config file loading
-- `http_proxy` / `HTTPS_PROXY` manipulation for man-in-the-middle attacks
-
-### Subprocess Environment
-- Subprocess invocations that inherit the full parent environment (including secrets)
-- Missing environment scrubbing - pass explicit minimal environment dict instead of inheriting
-
----
-
-## 4. Privilege Escalation & Execution
-
-### SUID/SGID Binaries
-- Insecure SUID binaries that fail to drop privileges before executing user-controlled operations
-- SUID binaries that execute other programs without absolute paths (PATH exploitation)
-- Missing privilege dropping after initial privileged operation
-
-### Sudo Wrappers
-- Sudo wrapper scripts that pass user input to privileged commands without sanitization
-- Wildcard usage in sudoers file entries (`/usr/bin/tool *` allows argument injection)
-- Missing `--` delimiter in sudo command construction
-
-### Signal Handler Races
-- Signal handlers that leave sensitive temporary files behind
-- Race conditions in lock file / PID file management during concurrent execution
-- SIGCHILD handler not properly cleaning up child processes (zombie processes)
-
----
-
-## 5. Output & Logging Safety
-
-### Terminal Injection
-- ANSI escape sequence injection in CLI output (terminal command execution via `\e]` sequences)
-- Log files containing user-controlled data rendered in terminal (escape sequences execute)
-- Missing output sanitization for terminal-rendered content
-
-### Sensitive Data in Output
-- Passwords, tokens, or API keys printed to stdout/stderr
-- Debug output containing internal paths, memory addresses, or system information
-- Missing `--quiet` / `--no-color` flags for CI/CD environments where output is logged
-
----
-
-## 6. File System Operations
-
-### Path Traversal
-- User-supplied file paths not validated against traversal (`../../../etc/passwd`)
-- Missing canonicalization of paths before access checks
-- Archive extraction (tar, zip) without path validation (Zip Slip vulnerability)
-
-### Permission Issues
-- Creating files/directories with overly permissive modes (0777, world-readable)
-- Missing umask setting before file creation
-- Following symbolic links when reading/writing files in shared directories
-
----
-
-## 7. Network Operations (If Applicable)
-
-### Download Safety
-- Downloading resources over HTTP instead of HTTPS
-- Missing integrity verification (checksum, GPG signature) on downloaded files
-- Missing TLS certificate verification on HTTPS connections
-- Auto-executing downloaded content (e.g., `curl | sh` pattern without verification)
-
-### API Communication
-- API keys passed as command-line arguments (visible in process listing via `ps`)
-- Missing timeout on network requests (hangs indefinitely)
-- DNS rebinding vulnerability in tools that validate hostnames then connect
+- Downloads over HTTP; no checksum or GPG verification; TLS verification off; auto-executing downloads (`curl | sh`)
+- API keys as command-line arguments (visible in `ps`)
+- No network timeouts
+- DNS rebinding in tools that validate a hostname, then connect

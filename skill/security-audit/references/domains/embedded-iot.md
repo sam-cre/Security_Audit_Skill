@@ -1,141 +1,73 @@
 # Vulnerability Reference: Embedded Systems, IoT & Firmware
 
-_Load this during Phase 1 when auditing embedded firmware, IoT devices, real-time operating systems (RTOS), hardware interfaces, or connected device ecosystems._
+_Load in Phase 1 for firmware, IoT devices, RTOS, hardware interfaces, or connected-device ecosystems._
 
 ---
 
-## 1. Firmware Security
+## 1. Firmware
 
-### Update Mechanism
-- Missing firmware signature verification (unsigned OTA updates allow malicious firmware)
-- No rollback protection (downgrade attacks to vulnerable versions)
-- Update channel over unencrypted HTTP (man-in-the-middle firmware injection)
-- Missing version validation (accepting older firmware as "update")
+**Update mechanism**
+- Unsigned OTA updates
+- No rollback or anti-downgrade protection; older firmware accepted as an "update"
+- Update channel over HTTP (MITM firmware injection)
 
-### Firmware Composition
-- Hardcoded credentials in firmware binary (WiFi passwords, API keys, default admin passwords)
-- Debug symbols and verbose logging left in production firmware
-- Embedded private keys or certificates in firmware images
-- Sensitive strings extractable via `strings` or `binwalk`
+**Composition**
+- Hardcoded credentials (WiFi passwords, API keys, default admin passwords); embedded private keys or certs
+- Debug symbols and verbose logging in production
+- Secrets extractable with `strings` or `binwalk`
 
-### Secure Boot
-- Missing secure boot chain (unsigned bootloader allows arbitrary code execution)
-- Bootloader unlocking without proper authorization
-- Missing chain-of-trust verification from bootloader → kernel → application
+**Secure boot**
+- Unsigned bootloader allows arbitrary code; bootloader unlock without authorization
+- No chain of trust from bootloader to kernel to application
 
----
+## 2. Hardware Debug Interfaces
 
-## 2. Hardware Debug Interface Exposure
+- **JTAG/SWD:** pins accessible in production (full memory access, firmware extraction); fuse/debug-lock bits unset; SWD not disabled
+- **UART/serial:** console on production hardware (often a root shell); boot logs leaking addresses, mounts, credentials; unauthenticated interactive shell
+- **Other:** I2C/SPI EEPROM dumping; USB debug modes (ADB, DFU) on; PCB test points exposing internal buses
 
-### JTAG / SWD
-- JTAG pins accessible on production hardware (allows full memory read/write, firmware extraction)
-- Missing JTAG fuse / debug lock bits in production firmware
-- SWD (Serial Wire Debug) interface not disabled
+## 3. Communication Protocols
 
-### UART / Serial Console
-- UART console accessible on production hardware (often provides root shell)
-- Boot log leaking sensitive information (kernel addresses, mount points, credentials)
-- Interactive root shell available without authentication via serial console
-
-### Other Interfaces
-- I2C/SPI bus accessible for EEPROM dumping (credential extraction)
-- USB debug modes (ADB, DFU) enabled in production
-- Test points on PCB providing access to internal buses
-
----
-
-## 3. Communication Protocol Security
-
-### Wireless Protocols
-- **BLE (Bluetooth Low Energy):** Missing pairing authentication, static passkeys, unencrypted GATT characteristics containing sensitive data
-- **Zigbee:** Default trust center link keys, unencrypted network traffic, insecure OTA key provisioning
-- **Z-Wave:** Missing S2 security framework, unauthenticated commands
-- **WiFi:** WPA2 with weak PSK, WPS enabled, credential stored in plaintext in flash
-
-### MQTT
-- MQTT broker without authentication (anonymous publish/subscribe)
-- Missing TLS on MQTT connections (plaintext sensor data / commands)
-- Overly broad topic ACLs (device can subscribe to all topics)
-- No message integrity verification
-
-### CoAP / HTTP
-- CoAP endpoints without DTLS encryption
-- REST APIs on device without authentication
-- Missing rate limiting on device API endpoints
-
----
+- **BLE:** no pairing authentication, static passkeys, unencrypted GATT characteristics with sensitive data
+- **Zigbee:** default trust center link keys, unencrypted traffic, insecure OTA key provisioning
+- **Z-Wave:** no S2 security, unauthenticated commands
+- **WiFi:** weak WPA2 PSK, WPS on, plaintext credentials in flash
+- **MQTT:** anonymous broker access; no TLS; topic ACLs so broad a device can subscribe to everything; no message integrity
+- **CoAP/HTTP:** no DTLS; unauthenticated device REST APIs; no rate limiting
 
 ## 4. Memory & Runtime Safety
 
-### Buffer Overflows
-- Stack buffer overflows in C/C++ firmware (string handling, network parsers)
-- Heap overflows in dynamic memory allocation
-- Missing bounds checking on input buffers (network packets, serial input, sensor data)
-
-### Memory Protection
-- Missing stack canaries in compiled firmware
-- No ASLR (Address Space Layout Randomization) - often unavailable on microcontrollers
-- Executable stack / heap (NX bit not set)
-- Missing MPU (Memory Protection Unit) configuration on Cortex-M devices
-
-### Integer Safety
-- Integer overflow in sensor value calculations
-- Signed/unsigned confusion in size parameters
-- Missing bounds validation on length fields in network protocols
-
----
+- Stack and heap overflows in C/C++ (string handling, network parsers); no bounds checks on packets, serial, or sensor input
+- No stack canaries; no ASLR (often unavailable on MCUs); executable stack/heap (NX unset); MPU unconfigured on Cortex-M
+- Integer overflow in sensor math; signed/unsigned confusion in sizes; unvalidated length fields in protocols
 
 ## 5. Physical Security
 
-### Tamper Resistance
-- No tamper detection mechanisms (tamper switches, mesh sensors)
-- Secrets stored in external EEPROM/flash (extractable with chip-off attacks)
-- Missing secure element (TPM, ATECC608) for key storage
-- PCB traces carrying sensitive signals accessible for probing
+- No tamper detection; secrets in external EEPROM/flash (chip-off extraction); no secure element (TPM, ATECC608); probeable PCB traces
+- Side channels: non-constant-time comparisons, power analysis (SPA/DPA), EM emanation
 
-### Side-Channel Attacks
-- Timing-based attacks on cryptographic operations (non-constant-time comparisons)
-- Power analysis vulnerability on crypto operations (SPA/DPA)
-- Electromagnetic emanation leaking information
+## 6. Device Identity & Fleet
 
----
-
-## 6. Device Identity & Authentication
-
-### Device Provisioning
-- All devices sharing the same credentials/certificates (compromise one → compromise all)
-- Device identity derived from predictable values (MAC address, serial number)
-- Missing device attestation mechanism
-
-### Fleet Management
-- No certificate revocation mechanism for compromised devices
-- Missing device decommissioning procedure (factory reset doesn't clear all secrets)
-- Over-the-air provisioning without mutual authentication
-
----
+- All devices share credentials or certs (one compromise is all)
+- Identity from predictable values (MAC, serial); no device attestation
+- No certificate revocation for compromised devices
+- Factory reset leaves secrets; no decommissioning procedure
+- OTA provisioning without mutual authentication
 
 ## 7. Data Storage & Privacy
 
-### On-Device Storage
-- Sensitive data stored in unencrypted flash/EEPROM
-- Credentials persisting after factory reset (incomplete wipe)
-- Log files accumulating sensitive sensor/user data without rotation
-
-### Data Transmission
-- Sensor data transmitted without encryption
-- Location/usage data sent to cloud without user consent
-- Missing data minimization (sending more data than necessary)
+- Sensitive data in unencrypted flash/EEPROM; credentials surviving factory reset; unrotated logs accumulating sensor or user data
+- Sensor data sent unencrypted; location or usage sent to cloud without consent; over-collection
 
 ---
 
 ## Tooling
 
-Check for availability of:
 ```bash
-binwalk firmware.bin          # Firmware extraction/analysis
-firmwalker firmware_root/     # Firmware filesystem analysis
-strings firmware.bin          # String extraction from binary
-checksec --file=binary        # Binary hardening checks (NX, PIE, canaries)
-openocd                       # JTAG/SWD interface tool
-minicom / screen              # UART serial console access
+binwalk firmware.bin          # firmware extraction
+firmwalker firmware_root/     # filesystem analysis
+strings firmware.bin          # string extraction
+checksec --file=binary        # NX, PIE, canaries
+openocd                       # JTAG/SWD
+minicom / screen              # UART console
 ```

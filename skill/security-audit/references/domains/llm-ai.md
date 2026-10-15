@@ -1,99 +1,82 @@
 # Vulnerability Reference: LLM & AI Application Security
 
-_Load this during Phase 1 when auditing applications using Large Language Models, agentic tool calls, RAG pipelines, vector databases, MCP servers, or AI-powered automation. Aligned with **OWASP Top 10 for LLM Applications** and **OWASP Top 10 for Agentic Applications (2026)**._
+_Load in Phase 1 for apps using LLMs, agentic tool calls, RAG, vector databases, MCP servers, or AI automation. Aligned with **OWASP Top 10 for LLM Applications** and **OWASP Top 10 for Agentic Applications (2026)**._
 
 ---
 
 ## LLM Application Vulnerabilities
 
-### 1. Direct & Indirect Prompt Injection
-- **Direct Injection:** System prompt override or jailbreaking via untrusted user inputs in chat, search, or form fields
-- **Indirect Injection:** Untrusted third-party content (scraped web pages, ingested emails, uploaded PDFs, database records, calendar events) overriding model instructions during retrieval/RAG
-- **Multi-turn Injection:** Gradual prompt manipulation across conversation turns to bypass guardrails
-- **Encoded Injection:** Payloads hidden in base64, Unicode, HTML entities, or markdown that decode during model processing
+### 1. Prompt Injection
+- **Direct:** system prompt override or jailbreak via chat, search, or form input
+- **Indirect:** untrusted third-party content (scraped pages, emails, PDFs, DB records, calendar events) overriding instructions during retrieval/RAG
+- **Multi-turn:** gradual manipulation across turns to bypass guardrails
+- **Encoded:** payloads in base64, Unicode, HTML entities, or markdown that decode during processing
 
 ### 2. Unsafe Tool/Function Calling
-- Executing system commands (`os.system`, `subprocess`), database queries, or file operations directly from model-generated text without validation
-- Missing JSON schema enforcement on tool call arguments
-- Missing human-in-the-loop approval for destructive/irreversible tool actions
-- Tool calls that can access resources beyond the user's permission scope
-- Chained tool calls where output of one tool becomes unvalidated input to another
+- System commands, DB queries, or file operations run straight from model text without validation
+- No JSON schema enforcement on tool arguments
+- No human approval for destructive or irreversible actions
+- Tools reaching resources beyond the user's permission scope
+- One tool's output becoming another's unvalidated input
 
-### 3. Excessive Agency & Autonomy
-- Agent systems with overly broad permissions (file system access, network access, code execution)
-- Missing scope boundaries - agent can access data/systems unrelated to the user's task
-- Auto-approval of dangerous actions without user confirmation
-- Missing execution sandboxing for agent-generated code
-- Cascading permissions: inner agent inherits outer agent's full permission set
+### 3. Excessive Agency
+- Agents with broad permissions (filesystem, network, code execution)
+- No scope boundary: access to data or systems unrelated to the task
+- Auto-approval of dangerous actions; no sandbox for agent-generated code
+- Inner agent inheriting the outer agent's full permissions
 
-### 4. Vector Database & RAG Security
-- **Access Control Leaks:** Vector DB queries returning document embeddings without enforcing user tenant or document-level access permissions
-- **RAG Poisoning:** Injecting malicious instruction payloads into data sources indexed by vector databases
-- **Embedding Inversion:** Extracting original text content from embedding vectors
-- **Context Window Poisoning:** Manipulating retrieval ranking to inject malicious context into the prompt
-- **Metadata Leakage:** Vector DB query results exposing source document metadata (file paths, user IDs, access levels)
+### 4. Vector DB & RAG
+- **Access control leaks:** queries returning embeddings without tenant or document-level permission checks
+- **RAG poisoning:** instruction payloads planted in indexed sources
+- **Embedding inversion:** recovering source text from vectors
+- **Context poisoning:** manipulating retrieval ranking to inject context
+- **Metadata leakage:** results exposing file paths, user IDs, access levels
 
-### 5. Model Output Validation & Data Exposure
-- System prompt extraction via prompt leak attacks ("repeat your instructions")
-- Treating unverified model output as trusted HTML, SQL, code, or system commands
-- Model hallucinating sensitive data from training set (PII, credentials, internal URLs)
-- Missing output sanitization before rendering in web UI (XSS via model output)
-- Exposing raw model responses containing chain-of-thought reasoning with internal details
+### 5. Output Validation & Data Exposure
+- System prompt extraction ("repeat your instructions")
+- Model output treated as trusted HTML, SQL, code, or commands (XSS via model output; sanitize before rendering)
+- Model emitting sensitive training data (PII, credentials, internal URLs)
+- Raw chain-of-thought with internal details exposed
 
 ### 6. Training Data & Model Supply Chain
-- Poisoned training data introducing backdoors or biased behavior
-- Model files downloaded from untrusted sources without integrity verification
-- Pickle deserialization in model loading (arbitrary code execution via malicious `.pkl` files)
-- Missing model provenance tracking (which model version is deployed?)
-- Fine-tuned models inheriting and amplifying base model vulnerabilities
+- Poisoned training data (backdoors, bias)
+- Model files from untrusted sources without integrity checks
+- Unsafe deserialization in model loading (arbitrary code via malicious Python-serialized `.pkl` model files; prefer safetensors)
+- No provenance tracking of the deployed model version
+- Fine-tuned models inheriting base-model flaws
 
 ---
 
 ## Agentic Application Vulnerabilities (OWASP 2026)
 
 ### 7. Memory Poisoning
-- Agent memory/context window poisoned by malicious user input persisting across sessions
-- Conversation history manipulation to alter agent behavior in future turns
-- Shared memory between agents allowing cross-contamination
-- Missing memory sanitization between different user sessions
+- Malicious input persisting in agent memory across sessions
+- Conversation history manipulation altering later behavior
+- Memory shared between agents (cross-contamination) or between user sessions (no sanitization)
 
 ### 8. Cascading Tool Permissions
-- Inner agents/sub-agents inheriting full permission sets from parent agents
-- Tool chains where intermediate results grant escalated access
-- Missing principle of least privilege in multi-agent orchestration
-- Agent A calls Agent B which calls Tool C - permission checks only at Agent A level
+- Sub-agents inheriting full parent permissions; tool chains where intermediate results escalate access
+- No least privilege in multi-agent orchestration
+- Agent A calls Agent B calls Tool C, with permission checks only at A
 
-### 9. MCP (Model Context Protocol) Server Security
-- MCP servers exposing tools without authentication
-- Missing input validation on MCP tool parameters
-- MCP tool descriptions containing prompt injection payloads
-- Overly permissive MCP server configurations granting file system or network access
-- Missing rate limiting on MCP tool invocations
+### 9. MCP Server Security
+- Tools exposed without authentication
+- No input validation on tool parameters
+- Tool descriptions carrying prompt injection payloads
+- Servers granting broad filesystem or network access
+- No rate limiting on tool invocations
 
-### 10. Denial of Wallet / Resource Exhaustion
-- Malicious inputs designed to maximize token consumption (cost attacks)
-- Recursive agent loops consuming unbounded API credits
-- Missing budget/cost controls on LLM API calls
-- Large context window stuffing to slow response or exceed limits
+### 10. Denial of Wallet
+- Inputs built to maximize token use; recursive agent loops burning credits
+- No budget or cost controls on LLM API calls
+- Context-window stuffing to slow or overflow responses
 
 ---
 
-## Cross-Cutting AI Security Checks
+## Cross-Cutting Checks
 
-### Input Controls
-- [ ] Are user inputs length-limited before reaching the model?
-- [ ] Is there content filtering on inputs (harmful content detection)?
-- [ ] Are file uploads (PDFs, images) scanned before being processed by the model?
-- [ ] Are RAG retrieval results filtered by user permissions?
+**Input:** inputs length-limited? Content filtering? Uploads (PDFs, images) scanned before the model? RAG results filtered by user permission?
 
-### Output Controls
-- [ ] Is model output sanitized before rendering in UI?
-- [ ] Are tool call arguments validated against a strict schema?
-- [ ] Is there a human-in-the-loop for irreversible actions?
-- [ ] Are model outputs logged for audit trail?
+**Output:** output sanitized before rendering? Tool arguments schema-validated? Human approval for irreversible actions? Outputs logged for audit?
 
-### System Controls
-- [ ] Are agent permissions scoped to the minimum needed?
-- [ ] Is there a cost/budget cap on LLM API usage?
-- [ ] Is the model version pinned (not auto-updating)?
-- [ ] Is there monitoring for anomalous model behavior?
+**System:** agent permissions minimal? Cost cap on API usage? Model version pinned? Monitoring for anomalous behavior?

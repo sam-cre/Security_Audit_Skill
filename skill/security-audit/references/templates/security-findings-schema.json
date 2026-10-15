@@ -36,6 +36,7 @@
           "cvssv4Vector": { "type": "string", "description": "Full CVSS v4.0 vector string" },
           "cvssv4Score": { "type": "number", "minimum": 0.0, "maximum": 10.0 },
           "cwe": { "type": "string" },
+          "owasp": { "type": "string", "description": "Category such as A01:2025, or N/A" },
           "strideCategory": {
             "type": "string",
             "enum": ["Spoofing", "Tampering", "Repudiation", "Information Disclosure", "Denial of Service", "Elevation of Privilege", "N/A"]

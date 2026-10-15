@@ -1,92 +1,91 @@
 # Domain: Browser Extensions
 
-_Load when the project has a `manifest.json` with `content_scripts`, `background`/`service_worker`, or WebExtension API usage (Chrome, Edge, Firefox, Safari)._
+_Load when the project has a `manifest.json` with `content_scripts`, `background`/`service_worker`, or WebExtension API use (Chrome, Edge, Firefox, Safari)._
 
-Extensions run with privileges no web page has and sit inside every page the user visits. A compromised extension is a compromise of every site the user is logged into.
+Extensions run with privileges no web page has, inside every page the user visits. A compromised extension compromises every site the user is logged into.
 
 ---
 
 ## 1. Manifest & Permissions
 
-- `<all_urls>` or `*://*/*` host permissions where a narrow list would do - the single most common over-privilege
-- `permissions` requesting more than the feature set needs: `tabs`, `cookies`, `webRequest`, `history`, `downloads`, `nativeMessaging`, `debugger`, `management`
-- `"debugger"` permission - grants full CDP control of every tab; almost never justified
-- Optional permissions available but not used; everything requested up front instead of on demand
-- Manifest V2 in a codebase still shipping - MV2 is deprecated and loses `webRequest` blocking
+- `<all_urls>` or `*://*/*` where a narrow list would do (the most common over-privilege)
+- `permissions` beyond need: `tabs`, `cookies`, `webRequest`, `history`, `downloads`, `nativeMessaging`, `debugger`, `management`
+- `debugger`: full CDP control of every tab, almost never justified
+- Optional permissions available but everything requested up front
+- Manifest V2 still shipping (deprecated, loses `webRequest` blocking)
 - `content_security_policy` weakened with `unsafe-eval` or `unsafe-inline`
-- `externally_connectable` set too broadly, letting arbitrary sites message the extension
-- `web_accessible_resources` exposing extension pages or scripts to all origins, which also leaks the extension ID for fingerprinting
+- `externally_connectable` too broad (any site can message the extension)
+- `web_accessible_resources` exposing pages or scripts to all origins; also leaks the extension ID for fingerprinting
 
 ## 2. Content Script Boundaries
 
-- Content script writing untrusted page data into `innerHTML` on the page or in an extension page
-- Trusting anything read out of the DOM - the page is attacker-controlled on a malicious site
-- Sharing objects across the isolated-world boundary in a way the page can tamper with
-- Injecting a script element into the page and then trusting what it sends back
-- Using `window.postMessage` without validating both `event.origin` **and** `event.source`
-- Content script holding secrets, tokens, or API keys - it is reachable from a hostile page context
-- Prototype pollution in the content script affecting page scripts, or the reverse
+- Untrusted page data written to `innerHTML` on the page or an extension page
+- Trusting anything read from the DOM (the page is attacker-controlled on a malicious site)
+- Objects shared across the isolated-world boundary in a way the page can tamper with
+- Injecting a script element, then trusting what it sends back
+- `window.postMessage` without validating both `event.origin` **and** `event.source`
+- Secrets, tokens, or API keys in a content script (reachable from a hostile page)
+- Prototype pollution in either direction
 
 ## 3. Message Passing
 
-- `chrome.runtime.onMessage` handler that does not verify `sender.id`, `sender.origin`, or `sender.tab`
-- `onMessageExternal` accepting messages from any extension or site
-- Message handler that dispatches to a function by name from the message body, giving an arbitrary internal call
-- Message handler performing privileged work (fetch to arbitrary URL, cookie read, storage write) on behalf of an unvalidated caller - this turns the extension into a confused deputy that proxies requests past the page's own CORS and same-origin restrictions
-- No schema validation on message payloads
+- `chrome.runtime.onMessage` not verifying `sender.id`, `sender.origin`, `sender.tab`
+- `onMessageExternal` accepting any extension or site
+- Handler dispatching to a function by name from the message body (arbitrary internal call)
+- Privileged work (fetch to any URL, cookie read, storage write) for an unvalidated caller: a confused deputy proxying requests past CORS and same-origin
+- No schema validation on payloads
 
 ## 4. Remote Code & Supply Chain
 
-- Loading and executing remote script - forbidden in MV3 and a store-review failure
-- Dynamic code evaluation (`eval`, the `Function` constructor, string-form `setTimeout`) applied to any externally influenced data
-- Remote configuration that changes behavior, selectors, or endpoints without review
-- Bundled third-party library loaded from a CDN rather than vendored and integrity-checked
-- Analytics or ad SDKs inside an extension with broad host permissions
-- No Subresource Integrity on any external resource the extension page loads
+- Loading and running remote script (forbidden in MV3, store-review failure)
+- Dynamic code evaluation (`eval`, the `Function` constructor, string-form `setTimeout`) on externally influenced data
+- Remote config changing behavior, selectors, or endpoints without review
+- Third-party library loaded from a CDN, not vendored and integrity-checked
+- Analytics or ad SDKs in an extension with broad host permissions
+- No SRI on external resources loaded by extension pages
 
 ## 5. Data Handling & Privacy
 
-- `chrome.storage.local` or `sync` holding tokens or PII unencrypted - readable by anyone with disk access, and `sync` leaves the machine
-- Browsing history, page content, or form data transmitted off-device; check whether the privacy policy and store listing actually disclose it
-- Keystroke, clipboard, or screenshot capture beyond the stated purpose
-- Cookies read via the `cookies` permission and forwarded anywhere
-- Logging page URLs or content to a remote endpoint
-- No data deletion path on uninstall
+- Tokens or PII unencrypted in `chrome.storage.local`/`sync` (disk-readable; `sync` leaves the machine)
+- Browsing history, page content, or form data sent off-device; check the privacy policy and store listing disclose it
+- Keystroke, clipboard, or screenshot capture beyond stated purpose
+- Cookies read via `cookies` and forwarded
+- Page URLs or content logged to a remote endpoint
+- No data deletion on uninstall
 
 ## 6. Network Behavior
 
-- `webRequest` / `declarativeNetRequest` rules that redirect or rewrite traffic in unexpected ways
-- Header stripping that removes `Content-Security-Policy`, `X-Frame-Options`, or CORS headers on pages the user visits - this weakens every site's defenses
-- Requests to hardcoded HTTP endpoints
-- Certificate or TLS validation bypassed in native components
+- `webRequest`/`declarativeNetRequest` rules that redirect or rewrite traffic unexpectedly
+- Stripping `Content-Security-Policy`, `X-Frame-Options`, or CORS headers on visited pages (weakens every site)
+- Hardcoded HTTP endpoints
+- TLS validation bypassed in native components
 
 ## 7. Extension Pages & UI
 
-- Popup, options, or side-panel page rendering untrusted content without escaping
-- Extension page reachable via `web_accessible_resources` and framable, allowing clickjacking of privileged UI
-- OAuth handled by opening a raw URL rather than `chrome.identity.launchWebAuthFlow`
-- Redirect URI in the extension OAuth flow not validated
+- Popup, options, or side panel rendering untrusted content unescaped
+- Page in `web_accessible_resources` and framable (clickjacking of privileged UI)
+- OAuth via a raw URL instead of `chrome.identity.launchWebAuthFlow`; redirect URI not validated
 
 ## 8. Native Messaging
 
-- Native host manifest `allowed_origins` listing more extensions than necessary
-- Native host building shell commands from message content, giving local command injection
-- Native host running with elevated privileges
-- Native host binary path writable by a non-admin user, giving local privilege escalation
+- `allowed_origins` lists more extensions than needed
+- Host builds shell commands from message content (local command injection)
+- Host runs elevated
+- Host binary path writable by a non-admin (local privilege escalation)
 
 ## 9. Update & Distribution
 
-- Self-hosted updates over HTTP, or without signature verification
-- Update URL pointing at a domain that could lapse
-- Publisher account without MFA (an extension takeover is a mass-compromise event)
-- No review process for what a new version's permission diff adds - silent permission escalation on update
+- Self-hosted updates over HTTP or without signature verification
+- Update URL on a domain that could lapse
+- Publisher account without MFA (takeover is a mass compromise)
+- No review of permission diffs across versions (silent escalation on update)
 
 ---
 
 ## Reviewing an Extension Well
 
-1. **Start at the manifest.** Every permission is a question: what code path needs this? Unused permissions are findings.
-2. **Treat the page as hostile.** Content scripts run on sites you do not control. Anything from the DOM is attacker input.
-3. **Follow every message handler.** Ask what the most hostile possible sender achieves by calling it.
-4. **Ask what leaves the machine.** Trace every `fetch` and `XMLHttpRequest` to its destination and compare against the stated privacy policy.
-5. **Diff permissions across versions** if history is available - silent escalation is a supply-chain signal.
+1. **Start at the manifest.** Each permission asks: what code path needs this? Unused ones are findings.
+2. **Treat the page as hostile.** Content scripts run on sites you don't control; DOM data is attacker input.
+3. **Follow every message handler.** What does the most hostile sender achieve by calling it?
+4. **Ask what leaves the machine.** Trace every `fetch` and `XMLHttpRequest` to its destination and compare with the privacy policy.
+5. **Diff permissions across versions** if history exists. Silent escalation is a supply-chain signal.

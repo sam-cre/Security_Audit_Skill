@@ -1,125 +1,123 @@
 # Domain: Microservices & Distributed Systems
 
-_Load when the project has more than one deployable service, gRPC, a message bus, a service mesh, or east-west traffic inside a cluster._
+_Load when the project has more than one deployable service, gRPC, a message bus, a service mesh, or east-west traffic in a cluster._
 
-The defining failure of microservice security is **assuming the network is trusted**. Every internal call is an attack surface once one service is compromised or the gateway is bypassed.
+The core failure is **assuming the network is trusted**. Once one service is compromised or the gateway is bypassed, every internal call is attack surface.
 
 ---
 
 ## 1. Service-to-Service Authentication
 
-- Internal endpoints with no authentication because they are "not exposed" - an SSRF or a pod compromise makes them exposed
-- Trusting a header the gateway sets (`X-User-Id`, `X-Roles`, `X-Tenant`) without verifying the request came from the gateway - a client that reaches the service directly spoofs it
-- Shared static API key across all services, so compromising one grants all
-- mTLS terminated at the mesh but the application also accepting plaintext on another port
-- Service identity derived from source IP or DNS name, both spoofable inside a flat network
-- Certificates with no rotation, or a single wildcard cert used by every service
-- SPIFFE/SPIRE or mesh identity available but not actually enforced in policy
+- Internal endpoints with no auth because they are "not exposed" (SSRF or a pod compromise exposes them)
+- Trusting a gateway-set header (`X-User-Id`, `X-Roles`, `X-Tenant`) without verifying the request came from the gateway
+- One shared static API key for all services
+- mTLS at the mesh, but the app also accepts plaintext on another port
+- Service identity from source IP or DNS name (spoofable on a flat network)
+- No cert rotation, or one wildcard cert for every service
+- SPIFFE/SPIRE or mesh identity available but not enforced in policy
 
 ## 2. Token Propagation
 
-- Original user JWT forwarded downstream but **not re-validated** at each hop
+- User JWT forwarded downstream but **not re-validated** at each hop
 - Token exchanged for a more privileged internal token with no scope narrowing
-- Downstream service trusting claims that an intermediate service could have modified
-- Long-lived internal tokens with no audience restriction - usable against any service
-- Token forwarded to a third-party or external service by accident
-- No correlation between the user identity and the action recorded downstream, so audit logs cannot attribute
+- Downstream trusting claims an intermediate service could have altered
+- Long-lived internal tokens with no audience restriction
+- Token accidentally forwarded to an external service
+- User identity not recorded with downstream actions (audit cannot attribute)
 
 ## 3. Gateway & Perimeter
 
-- Routes reachable directly on the service port, bypassing the gateway's authn, rate limiting, and WAF
-- Gateway rate limits and body-size limits not replicated at the service
-- Path normalization mismatch between gateway and service - `/admin/..;/` or double-encoded paths routed differently by each, defeating gateway ACLs
-- Gateway allowlist by path prefix while the service exposes additional routes under it
-- Admin/actuator/debug endpoints (`/actuator`, `/metrics`, `/debug/pprof`, `/health` with detail) exposed without auth
-- Service mesh sidecar bypassable via `hostNetwork`, or traffic to ports the mesh does not capture
+- Routes reachable on the service port directly, bypassing gateway authn, rate limits, and WAF
+- Gateway rate and body-size limits not replicated at the service
+- Path normalization mismatch (`/admin/..;/`, double-encoded paths) defeating gateway ACLs
+- Gateway allowlist by path prefix while the service exposes more routes under it
+- Admin/actuator/debug endpoints (`/actuator`, `/metrics`, `/debug/pprof`, detailed `/health`) without auth
+- Mesh sidecar bypass via `hostNetwork` or ports the mesh doesn't capture
 
 ## 4. Network Policy & Segmentation
 
-- Default-allow east-west traffic - any pod can reach any service
-- No `NetworkPolicy` or an overly broad one; namespaces not isolated
-- Databases and caches reachable from every service rather than only their owner
-- Management planes (Redis, Elasticsearch, Kafka, etcd, RabbitMQ admin) bound to `0.0.0.0` with default or no auth
-- Egress unrestricted, so a compromised pod can exfiltrate freely or pull attacker payloads
+- Default-allow east-west traffic; no or overly broad `NetworkPolicy`; namespaces not isolated
+- Databases and caches reachable from every service, not just the owner
+- Redis, Elasticsearch, Kafka, etcd, RabbitMQ admin bound to `0.0.0.0` with default or no auth
+- Unrestricted egress (exfiltration, payload download)
 
 ## 5. Message Queues & Event Streams
 
-- No authentication or ACLs on Kafka, RabbitMQ, NATS, SQS, or Pub/Sub topics
-- Any service able to publish to any topic - a compromised low-privilege service forges high-privilege events
-- Message payloads not integrity-protected, so a broker compromise lets messages be rewritten
-- Consumers trusting message content as pre-validated because "it came from inside"
-- Unsafe deserialization of message payloads (language-native object formats rather than a schema)
-- No replay protection or idempotency key, so redelivery causes duplicate side effects
-- Poison-message handling that retries forever, causing self-inflicted denial of service
-- Dead-letter queues holding sensitive payloads with weaker access control than the source
-- PII in event payloads that fan out to consumers with no need for it
+- No auth or ACLs on Kafka, RabbitMQ, NATS, SQS, or Pub/Sub topics
+- Any service can publish to any topic (a low-privilege service forges high-privilege events)
+- Payloads not integrity-protected (broker compromise rewrites them)
+- Consumers trusting content as pre-validated because it came from inside
+- Unsafe deserialization (language-native object formats instead of a schema)
+- No replay protection or idempotency key (duplicate side effects)
+- Poison messages retried forever (self-DoS)
+- Dead-letter queues with weaker access control than the source
+- PII in events fanned out to consumers that don't need it
 
-## 6. gRPC & RPC Surfaces
+## 6. gRPC & RPC
 
-- Server reflection enabled in production, publishing the full service schema
-- TLS disabled on internal gRPC
-- Interceptors for authn/authz applied to some services but not all, or not to streaming methods
-- No message size limit, allowing memory exhaustion
-- Errors returning internal detail in `Status` messages
-- Protobuf `Any` fields deserialized into arbitrary types
+- Server reflection on in production
+- TLS off on internal gRPC
+- Authn/authz interceptors on some services only, or missing on streaming methods
+- No message size limit
+- Internal detail in `Status` errors
+- Protobuf `Any` deserialized into arbitrary types
 
 ## 7. SSRF as a Pivot
 
-In a cluster, SSRF is far more severe than on a monolith.
+In a cluster SSRF is far worse than on a monolith.
 
-- Any user-controlled URL fetched by a service reaches internal services, the cloud metadata endpoint, and the Kubernetes API
-- Metadata endpoints not blocked: `169.254.169.254`, `metadata.google.internal`, `100.100.100.200`
-- No allowlist on outbound destinations; redirects followed without re-validating the target
-- DNS rebinding not considered - validation and fetch resolve the name twice
-- Link-local, loopback, and RFC1918 ranges not blocked, including IPv6 equivalents
+- User-controlled URLs reach internal services, the cloud metadata endpoint, and the Kubernetes API
+- Metadata not blocked: `169.254.169.254`, `metadata.google.internal`, `100.100.100.200`
+- No outbound allowlist; redirects followed without re-validating
+- DNS rebinding (validation and fetch resolve twice)
+- Link-local, loopback, RFC1918 not blocked, including IPv6
 
-## 8. Service Discovery & Configuration
+## 8. Discovery & Configuration
 
-- Service registry (Consul, etcd, Eureka) writable without auth → traffic redirection
-- Config server serving secrets to any client that asks
-- Environment-injected secrets visible in `/proc`, crash dumps, or debug endpoints
-- Secrets in Kubernetes `ConfigMap` rather than `Secret`, or `Secret` without encryption at rest
-- Container images baked with credentials
-- Sidecar or init container with broader RBAC than the workload needs
+- Service registry (Consul, etcd, Eureka) writable without auth (traffic redirection)
+- Config server serving secrets to any asker
+- Env-injected secrets visible in `/proc`, crash dumps, debug endpoints
+- Secrets in `ConfigMap` not `Secret`, or `Secret` without encryption at rest
+- Images baked with credentials
+- Sidecar or init container with broader RBAC than the workload
 
 ## 9. Kubernetes Workload Identity
 
-- Default ServiceAccount token auto-mounted into pods that never call the API
-- RBAC granting `cluster-admin`, wildcard verbs, or `secrets: list` across namespaces
-- Pods running privileged, as root, or with `hostPID` / `hostPath` mounts
+- Default ServiceAccount token auto-mounted in pods that never call the API
+- RBAC with `cluster-admin`, wildcard verbs, or `secrets: list` across namespaces
+- Privileged pods, root, `hostPID`, `hostPath`
 - No Pod Security admission enforcement
-- Cloud IAM bound to a node rather than a workload, so every pod inherits node permissions
+- Cloud IAM bound to the node, so every pod inherits it
 
 ## 10. Observability Leaks
 
-- Distributed traces capturing full request bodies, headers, tokens, or PII
-- Logs aggregated centrally with weaker access control than the source data
-- Metrics endpoints exposing user identifiers or business-sensitive cardinality
-- Correlation IDs supplied by the client and trusted for audit attribution
+- Traces capturing full bodies, headers, tokens, PII
+- Central logs with weaker access control than the source data
+- Metrics exposing user identifiers or sensitive cardinality
+- Client-supplied correlation IDs trusted for audit attribution
 - Profiling and heap-dump endpoints reachable in production
 
 ## 11. Resilience & Consistency
 
-- No timeout on inter-service calls, causing cascading stalls and thread exhaustion
-- Retries without backoff or a budget, amplifying a partial outage into a self-DoS
-- No circuit breaker, so one slow dependency takes down the fleet
-- Distributed transaction or saga with a compensating action that can be skipped, leaving the system in a profitable-to-attacker state
-- Non-idempotent operations exposed to at-least-once delivery
-- Eventual consistency used for an authorization decision - check on stale data, act on fresh
+- No timeout on inter-service calls (cascading stalls)
+- Retries without backoff or budget (self-DoS); no circuit breaker
+- Saga compensation that can be skipped, leaving an attacker-profitable state
+- Non-idempotent operations under at-least-once delivery
+- Authorization decided on stale data under eventual consistency
 
 ## 12. Multi-Tenancy Across Services
 
-- Tenant context established at the edge but not propagated, so downstream services query unscoped
-- Caches, search indexes, and object storage keyed without a tenant component
-- Async jobs losing tenant context and running with elevated or wrong scope
-- One tenant's load able to starve another (no per-tenant quota)
+- Tenant context set at the edge but not propagated, so downstream queries are unscoped
+- Caches, search indexes, object storage keyed without tenant
+- Async jobs losing tenant context
+- No per-tenant quota (one tenant starves another)
 
 ---
 
 ## Reviewing a Distributed System Well
 
-1. **Draw the real call graph.** Which service calls which, over what protocol, with what credential. Findings live in the edges, not the nodes.
-2. **Assume one service is already owned.** For each service, ask what an attacker inside it reaches. That is the blast radius, and it is the core question.
-3. **Try to bypass the gateway.** If a service can be reached on its own port, every gateway control is advisory.
-4. **Follow one user request end to end**, watching where identity is re-verified and where it is merely believed.
-5. **Check the async paths.** Queue consumers and scheduled jobs are consistently less scrutinized than HTTP handlers, and they usually run with more privilege.
+1. **Draw the real call graph:** who calls whom, over what protocol, with what credential. Findings live in the edges.
+2. **Assume one service is already owned.** What can an attacker inside it reach? That is the blast radius.
+3. **Try to bypass the gateway.** If a service answers on its own port, gateway controls are advisory.
+4. **Follow one user request end to end,** noting where identity is re-verified versus believed.
+5. **Check async paths.** Consumers and scheduled jobs get less scrutiny than HTTP handlers and usually hold more privilege.

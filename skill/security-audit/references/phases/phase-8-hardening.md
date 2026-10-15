@@ -1,76 +1,51 @@
 # Phase 8 - Guided Infrastructure Hardening
 
-_Prerequisite: Phase 7 complete. Hold `.security-audit/project-profile.md` for deployment context. Release source files._
+_Prerequisite: Phase 7 done. Hold `.security-audit/project-profile.md` for deployment context. Release source files._
 
-This phase covers what **cannot be fixed in source code** - TLS, DNS, headers, secrets storage, WAF, monitoring. These live in hosting dashboards, DNS registrars, and cloud consoles.
-
-**This is a guided walkthrough, not a checklist dump.** The failure mode of a checklist is that the user reads it, nods, and applies none of it. Work one item at a time and verify each before moving on.
+Covers what source code cannot fix: TLS, DNS, headers, secrets storage, WAF, monitoring. These live in hosting dashboards, registrars, and cloud consoles. Run it as a guided walkthrough, one item at a time, not a checklist dump.
 
 ---
 
-## How to Run This Phase
+## How to Run
 
-1. **Establish the real stack.** Ask, don't assume:
-   > Before I generate hardening steps - where does this actually run? (host/PaaS, DNS provider, CDN/WAF if any, where secrets live today, and whether you have console access.)
+1. **Establish the real stack.** Ask: where does this run (host/PaaS, DNS provider, CDN/WAF, where secrets live now) and does the user have console access? Tailor everything to the answers.
+2. **Order by risk.** For an internet-facing app with PII: Secrets, TLS, Headers, Auth surface, Monitoring, DNS, Email.
+3. **Per item:** **Why** (risk, tied to a Phase 1 finding if any), **Do** (exact commands or clicks for their provider), **Verify** (a command proving it worked), **Record** (`Applied` / `Skipped` / `N/A` / `Blocked (reason)` in `.security-audit/hardening-recommendations.md`).
+4. An item is done only when its verify command passes. If you cannot verify, mark `Pending verification`.
+5. The user applies DNS, TLS, WAF, and vault changes. You write the exact config and verify. The user enters any credentials; you never do.
+6. Stop when the user has had enough. Ten verified items beat forty unread. The checklist file is the resume point.
 
-   Everything below is tailored to those answers. Generic advice is worthless here.
-
-2. **Order by risk**, not by section number. Run the tracks in the order the project's threat model justifies. For an internet-facing app handling PII, that is usually: Secrets → TLS → Headers → Auth surface → Monitoring → DNS → Email.
-
-3. **One item at a time.** For each:
-   - **Why** - the concrete risk, tied to a Phase 1 finding where one exists
-   - **Do** - exact commands or exact dashboard clicks for *their* provider
-   - **Verify** - a command that proves it worked
-   - **Record** - mark `Applied` / `Skipped` / `N/A` / `Blocked (reason)` in `.security-audit/hardening-recommendations.md`
-
-4. **Never claim an item is done because you gave instructions.** It is done when the verify command passes. If you cannot verify (no console access, DNS not propagated), mark it `Pending verification` and say so.
-
-5. **Do not perform these changes yourself.** DNS records, TLS certs, WAF rules, and vault migrations are the user's to apply - you write the exact config and verify the result. If a step needs credentials, the user enters them; you never do.
-
-6. **Stop when the user has had enough.** Ten verified items beat forty unread ones. Offer to resume later; the checklist file is the resume point.
-
----
-
-## Deliverable
-
-`.security-audit/hardening-recommendations.md`, built from `references/templates/hardening-recommendations-template.md`. Each row carries a status. Add a summary line at the top:
-
-```
-Applied: 12  ·  Pending verification: 3  ·  Skipped (accepted risk): 2  ·  N/A: 7
-```
+**Deliverable:** `.security-audit/hardening-recommendations.md` from `references/templates/hardening-recommendations-template.md`, a status on every row, and a top line like:
+`Applied: 12 · Pending verification: 3 · Skipped (accepted risk): 2 · N/A: 7`
 
 ---
 
 ## Track A - Secrets (usually first)
 
-**Why first:** a leaked credential defeats every other control.
+A leaked credential defeats every other control.
 
 | Item | Do | Verify |
 |---|---|---|
-| Get secrets out of source | Move `.env` values into the platform's secret store (Vercel/Netlify env vars, AWS Secrets Manager, GCP Secret Manager, Azure Key Vault, Doppler, HashiCorp Vault) | `gitleaks detect --source . --log-opts="--all"` returns clean |
-| Rotate anything ever committed | Rotate at the provider. History rewriting alone does not help - assume it is public | New credential works; old one returns 401 |
-| Stop the next leak | Enable GitHub/GitLab push protection; install the pre-commit hook from Phase 7 | Test-commit a dummy key and confirm it is blocked |
-| Scope down | Replace long-lived root keys with least-privilege scoped credentials; prefer OIDC federation over static keys in CI | Review the IAM policy for wildcards |
-| Rotation schedule | Set 90-day rotation with calendar reminders or automated rotation | Rotation date recorded |
+| Out of source | Move `.env` values to a secret store (platform env vars, AWS/GCP/Azure secret managers, Doppler, Vault) | `gitleaks detect --source . --log-opts="--all"` clean |
+| Rotate anything ever committed | Rotate at the provider. Rewriting history is not enough; assume public | New credential works, old returns 401 |
+| Stop the next leak | Enable push protection; install the Phase 7 pre-commit hook | Commit a dummy key; it is blocked |
+| Scope down | Least-privilege scoped credentials; OIDC federation over static keys in CI | IAM policy has no wildcards |
+| Rotation | 90-day rotation, reminders or automated | Date recorded |
 
----
-
-## Track B - Transport (TLS)
+## Track B - TLS
 
 | Item | Do | Verify |
 |---|---|---|
-| TLS 1.2 minimum, 1.3 preferred | Set the minimum version at the load balancer, CDN, or reverse proxy | `openssl s_client -connect HOST:443 -tls1_1` must **fail** |
-| Disable weak ciphers | Remove RC4, 3DES, CBC-mode suites, anything with `NULL` or `EXPORT` | `nmap --script ssl-enum-ciphers -p 443 HOST` shows A-grade only |
+| TLS 1.2 min, 1.3 preferred | Set at LB, CDN, or proxy | `openssl s_client -connect HOST:443 -tls1_1` fails |
+| Weak ciphers | Remove RC4, 3DES, CBC suites, NULL, EXPORT | `nmap --script ssl-enum-ciphers -p 443 HOST` |
 | HSTS | `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` | `curl -sI https://HOST \| grep -i strict-transport` |
-| HSTS preload | Submit at hstspreload.org - **only after** confirming every subdomain is HTTPS. This is hard to undo. | Domain appears in the preload list |
-| Cert auto-renewal | ACME / Let's Encrypt / ACM, plus an expiry alert at 15 days | Force a renewal in staging and confirm it succeeds |
-| Redirect HTTP | 301 all HTTP to HTTPS at the edge | `curl -sI http://HOST` returns 301 to `https://` |
-
----
+| HSTS preload | hstspreload.org, **only after** every subdomain is HTTPS. Hard to undo | Domain in the list |
+| Auto-renewal | ACME/ACM plus expiry alert at 15 days | Forced staging renewal succeeds |
+| HTTP redirect | 301 to HTTPS at the edge | `curl -sI http://HOST` |
 
 ## Track C - Security Headers
 
-Generate a CSP **from the codebase**, not from a template. Scan for actual script, style, font, image, and connect origins, then build the narrowest policy that does not break the app.
+Build the CSP **from the codebase**: scan real script, style, font, image, and connect origins, then write the narrowest policy that works.
 
 ```nginx
 add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
@@ -82,128 +57,85 @@ add_header Cross-Origin-Opener-Policy "same-origin" always;
 add_header Cross-Origin-Resource-Policy "same-origin" always;
 ```
 
-**CSP rollout order** - do not skip this, a bad CSP is an outage:
-1. Deploy as `Content-Security-Policy-Report-Only` with a `report-uri`
-2. Collect violations for at least one full traffic cycle (a week for most apps)
-3. Widen only for legitimate violations; prefer nonces over `'unsafe-inline'`
-4. Flip to enforcing
+**CSP rollout** (a bad CSP is an outage): 1) `Content-Security-Policy-Report-Only` with `report-uri`; 2) collect violations for a full traffic cycle (about a week); 3) widen only for legitimate violations, prefer nonces over `'unsafe-inline'`; 4) enforce.
 
-Skip header work entirely for APIs that never return HTML - see `rules.md` section 7. `X-Frame-Options` is superseded by `frame-ancestors`; set it only for legacy browser support.
+Skip headers for APIs that never return HTML (`rules.md` section 7). `frame-ancestors` supersedes `X-Frame-Options`; set the latter only for legacy browsers.
 
-**Verify:** `curl -sI https://HOST` and check each header is present with the intended value.
-
----
+**Verify:** `curl -sI https://HOST`, each header present with the intended value.
 
 ## Track D - Edge, WAF, Rate Limiting
 
-Only recommend a WAF if there is a specific reason. "Deploy a WAF" with no finding behind it is noise.
+Recommend a WAF only with a specific reason.
 
 | Item | Do | Verify |
 |---|---|---|
-| Managed ruleset | Enable OWASP core rules at the CDN (Cloudflare, AWS WAF, Azure Front Door, Fastly) | Send a benign probe such as `?q=<script>` and confirm it is blocked or logged |
-| Rate limit auth endpoints | Login, signup, password reset, token refresh, and any expensive search or export | Script N+1 requests and confirm a 429 |
-| Origin lockdown | Restrict origin to CDN IP ranges or authenticated origin pulls, so the WAF cannot be bypassed | Request the origin IP directly; it must refuse |
-| Body size limits | Cap request body size at the edge and in the app | Post an oversized body and confirm 413 |
-| Timeouts | Set request timeouts at every layer to prevent slowloris and cascading stalls | Slow-drip a request and confirm it is cut |
-
----
+| Managed ruleset | Enable OWASP core rules at the CDN | Benign probe `?q=<script>` is blocked or logged |
+| Rate limit | Login, signup, reset, token refresh, expensive search/export | N+1 requests return 429 |
+| Origin lockdown | Allow only CDN IPs or authenticated origin pulls | Direct origin request refused |
+| Body size | Cap at edge and app | Oversized post returns 413 |
+| Timeouts | Every layer, against slowloris | Slow-drip request is cut |
 
 ## Track E - DNS
 
 | Item | Do | Verify |
 |---|---|---|
-| DNSSEC | Enable at the registrar | `dig +dnssec HOST` shows RRSIG records |
-| CAA records | Restrict issuance to your CAs: `HOST. IN CAA 0 issue "letsencrypt.org"` | `dig CAA HOST` |
-| Dangling records | Audit every CNAME for subdomain takeover - records pointing at deprovisioned cloud resources | Each CNAME target resolves to a resource you still own |
-| Registrar lock | Enable transfer lock and 2FA on the registrar account | Confirm in the registrar console |
-
----
+| DNSSEC | Enable at registrar | `dig +dnssec HOST` shows RRSIG |
+| CAA | `HOST. IN CAA 0 issue "letsencrypt.org"` | `dig CAA HOST` |
+| Dangling records | Audit every CNAME for takeover (deprovisioned cloud targets) | Each target is a resource you own |
+| Registrar lock | Transfer lock plus 2FA | Confirm in console |
 
 ## Track F - Monitoring & Response
 
-Detection is what turns a breach into an incident instead of a disaster.
-
 | Item | Do | Verify |
 |---|---|---|
-| Centralized logs | Ship app, access, and auth logs off-host (CloudWatch, Datadog, Loki, ELK) | Logs appear within the expected delay |
-| Auth event logging | Log every login success, failure, privilege change, and password/email change - **never** log the credentials | Trigger each event and confirm it lands |
-| Alerts | 401/403 spike · admin login from a new ASN or country · IAM or secret access anomaly · bulk data export · unhandled-exception rate | Fire a test event per alert |
-| Log retention | Retain long enough to investigate (90 days minimum for most; compliance may require more) | Confirm the retention policy |
-| `security.txt` | Publish `/.well-known/security.txt` per RFC 9116 with a real contact and a future `Expires` | `curl https://HOST/.well-known/security.txt` |
-| Response runbook | Write down: who to call, how to revoke sessions, how to rotate every secret, how to roll back | The runbook exists and names real people |
-
----
+| Central logs | Ship app, access, auth logs off-host | Logs arrive in expected time |
+| Auth events | Log login success/failure, privilege, password/email changes. Never log credentials | Trigger each, confirm it lands |
+| Alerts | 401/403 spike, admin login from new ASN/country, IAM or secret anomaly, bulk export, exception rate | Fire a test per alert |
+| Retention | 90 days minimum unless compliance says more | Policy confirmed |
+| `security.txt` | `/.well-known/security.txt` per RFC 9116, real contact, future `Expires` | `curl` it |
+| Runbook | Who to call, revoke sessions, rotate every secret, roll back | Exists and names real people |
 
 ## Track G - Email Authentication (only if the domain sends mail)
 
-Roll out DMARC in stages - jumping straight to `p=reject` will drop legitimate mail.
+Stage DMARC; jumping to `p=reject` drops legitimate mail.
+1. SPF: `v=spf1 include:PROVIDER ~all`, under 10 lookups
+2. DKIM: enable signing, publish key
+3. DMARC: `v=DMARC1; p=none; rua=mailto:dmarc@DOMAIN`
+4. Read reports 2-4 weeks, fix legitimate failing senders
+5. `p=quarantine`, then `p=reject`
 
-1. SPF: `v=spf1 include:PROVIDER ~all` - keep under 10 DNS lookups
-2. DKIM: enable signing at the provider, publish the public key
-3. DMARC monitoring: `v=DMARC1; p=none; rua=mailto:dmarc@DOMAIN`
-4. Read reports for 2–4 weeks, fix legitimate senders that fail
-5. Tighten to `p=quarantine`, then `p=reject`
-
-**Verify:** `dig TXT DOMAIN`, `dig TXT _dmarc.DOMAIN`, and send a test to a mailbox that reports authentication results.
-
----
+**Verify:** `dig TXT DOMAIN`, `dig TXT _dmarc.DOMAIN`, and a test mail to a mailbox that shows auth results.
 
 ## Track H - Platform-Specific
 
 Run only the block matching the Phase 0 deployment model.
 
-**Containers / Kubernetes**
-- Non-root user (`USER 10001`), `readOnlyRootFilesystem: true`, `allowPrivilegeEscalation: false`
-- Drop all capabilities, add back only what is needed
-- Seccomp `RuntimeDefault`; AppArmor or SELinux where available
-- Distroless or minimal base image; scan images in CI
-- Resource limits on every container; NetworkPolicy default-deny east-west
-- Verify: `trivy image IMAGE`, `kube-score score manifest.yaml`
+**Containers / Kubernetes:** non-root (`USER 10001`), `readOnlyRootFilesystem`, `allowPrivilegeEscalation: false`; drop all capabilities; seccomp `RuntimeDefault`; minimal base image scanned in CI; resource limits; default-deny NetworkPolicy. Verify: `trivy image IMAGE`, `kube-score score manifest.yaml`.
 
-**Serverless**
-- One least-privilege execution role per function, never a shared role
-- Strict timeouts and concurrency caps (runaway-bill protection)
-- Private networking to data stores; no public function URLs unless intended
-- Verify: review each function's IAM policy for wildcard actions or resources
+**Serverless:** one least-privilege role per function; strict timeouts and concurrency caps; private networking to data stores; no unintended public URLs. Verify: no wildcard IAM actions or resources.
 
-**Desktop / Electron / Tauri**
-- Code signing and notarization; `contextIsolation: true`, `nodeIntegration: false`
-- Strict `allowlist`/capability config in Tauri; validate all IPC input
-- Auto-update over HTTPS with signature verification
-- Strip debug symbols from release builds
-- Verify: confirm the signature on a built artifact
+**Desktop (Electron/Tauri):** signing and notarization; `contextIsolation: true`, `nodeIntegration: false`; strict Tauri capability config and validated IPC; signed auto-update over HTTPS; no debug symbols in release. Verify: signature on a built artifact.
 
-**Mobile**
-- Certificate pinning; no secrets in the bundle (they are extractable, always)
-- Keychain/Keystore for tokens, never `SharedPreferences`/`UserDefaults`
-- Disable backup of sensitive data; obfuscate release builds
-- Verify: unzip the built package and grep for known secret patterns
+**Mobile:** certificate pinning; no secrets in the bundle (always extractable); Keychain/Keystore for tokens, not `SharedPreferences`/`UserDefaults`; no backup of sensitive data; obfuscated release. Verify: unzip the package and grep for secret patterns.
 
-**Embedded / IoT**
-- Signed firmware with rollback protection and anti-downgrade
-- Disable JTAG/UART/debug in production images
-- Secure boot chain; encrypted credential storage
-- Per-device unique keys - never a shared factory key
-- Verify: attempt to flash an unsigned image; it must be rejected
-
----
+**Embedded / IoT:** signed firmware with rollback and anti-downgrade; JTAG/UART/debug off in production; secure boot; encrypted credential storage; unique per-device keys. Verify: flashing an unsigned image is rejected.
 
 ## Track I - Supply Chain & Repo
 
 | Item | Do | Verify |
 |---|---|---|
-| Least-privilege CI | Default `permissions: read-all`, grant per job | Review workflow files |
-| Pin actions/images | Pin third-party CI actions to a commit SHA, not a tag | Grep for `@v` in workflow files |
-| Branch protection | Require PR review, passing checks, and signed commits on the default branch | Try to push directly; it must be rejected |
-| Artifact signing | Sign releases and container images (Sigstore/Cosign) | `cosign verify` succeeds |
-| Publish SBOM | Attach the CycloneDX SBOM to each release | SBOM present on the release |
-| Dependency updates | Enable Dependabot or Renovate with auto-merge for patch-level security updates | A test PR is raised |
+| Least-privilege CI | Default `permissions: read-all`, grant per job | Review workflows |
+| Pin actions/images | Pin third-party actions to a commit SHA | Grep `@v` in workflows |
+| Branch protection | Require review, passing checks, signed commits | Direct push rejected |
+| Artifact signing | Sigstore/Cosign for releases and images | `cosign verify` |
+| SBOM | Attach CycloneDX SBOM to each release | Present on release |
+| Dependency updates | Dependabot or Renovate, auto-merge patch security updates | Test PR raised |
 
 ---
 
 ## Closing the Audit
 
-1. Ensure `.security-audit/hardening-recommendations.md` has a status on every row
-2. Update `.security-audit/security-audit-report.md` with the hardening summary
+1. Every row in `hardening-recommendations.md` has a status
+2. Add the hardening summary to `security-audit-report.md`
 3. State plainly what remains unverified and why
-4. Recommend a re-audit in 3–6 months, or after any major change - `references/differential-audit-protocol.md` makes the re-run cheap
+4. Recommend a re-audit in 3-6 months or after major change; `references/differential-audit-protocol.md` makes it cheap

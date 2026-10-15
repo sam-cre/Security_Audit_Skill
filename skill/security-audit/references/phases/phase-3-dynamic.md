@@ -1,132 +1,83 @@
 # Phase 3 - Dynamic Analysis & Executable PoC Harnesses
 
-_Load this after Phase 2 is complete. Also load the language-specific PoC template(s) matching the project's language(s)._
+_Load after Phase 2, plus the PoC template(s) matching the project's language(s)._
+
+**Objectives:** an executable PoC per confirmed finding; DAST against live endpoints if applicable; a structured verdict per test; findings updated with dynamic evidence. Safety rules: `rules.md` section 8.
 
 ---
 
-## Objectives
+## Step 1: PoC Harnesses
 
-1. Write executable PoC test harnesses for every confirmed finding
-2. Run DAST scanning against live service endpoints (if applicable)
-3. Produce a structured verdict per test
-4. Update finding statuses and confidence levels based on dynamic evidence
+For each finding in `.security-audit/audit-checklist.md`, write `.security-audit/security-tests/test_secXXX_poc.<ext>`.
 
----
-
-## Step 1: PoC Harness Creation
-
-For each finding in `.security-audit/audit-checklist.md`, write a structured executable test harness.
-
-### File Naming Convention
-```
-.security-audit/security-tests/test_secXXX_poc.<ext>
-```
-
-### Template Selection
-Choose the PoC template matching the project's primary language:
-
-| Language | Template File | Test Patterns Available |
+| Language | Template (`references/templates/`) | Patterns |
 |---|---|---|
-| **Python** | `references/templates/poc-test-harness-template.py` | SQLi, Command Injection, JWT, Crypto, TOCTOU, Deserialization, Path Traversal, Password Hashing, XSS |
-| **JavaScript/TypeScript** | `references/templates/poc-test-harness-template.js` | Prototype Pollution, DOM XSS, JWT, Async Race Conditions, Command Injection |
-| **Go** | `references/templates/poc-test-harness-template.go` | Unparameterized SQL, Command Injection, Path Traversal, Goroutine Race Conditions |
-| **Rust** | `references/templates/poc-test-harness-template.rs` | Unsafe Block Safety, Shell Command Injection, Path Traversal |
-| **C/C++** | `references/templates/poc-test-harness-template.c` | Buffer Bounds, Format String, Integer Safety |
+| **Python** | `poc-test-harness-template.py` | SQLi, command injection, JWT, crypto, TOCTOU, deserialization, path traversal, password hashing, XSS |
+| **JS/TS** | `poc-test-harness-template.js` | Prototype pollution, DOM XSS, JWT, async races, command injection |
+| **Go** | `poc-test-harness-template.go` | Raw SQL, command injection, path traversal, goroutine races |
+| **Rust** | `poc-test-harness-template.rs` | Unsafe blocks, shell injection, path traversal |
+| **C/C++** | `poc-test-harness-template.c` | Buffer bounds, format string, integer safety |
 
-No template for the project's language (for example Java, C#, PHP, Ruby, Kotlin, Swift): load the template closest in style, keep its structure (setup, the exploit attempt, an assertion that tells vulnerable from fixed, cleanup), and write the harness in that language's own test framework (JUnit, xUnit, PHPUnit, RSpec, XCTest). Name the template it was adapted from in the harness header. A finding that cannot be exercised from a test (for example a cloud setting) gets a scripted check or a manual verification step instead, and its verdict says so.
+No template for the language (Java, C#, PHP, Ruby, Kotlin, Swift)? Load the closest in style, keep its structure (setup, exploit attempt, an assertion separating vulnerable from fixed, cleanup), write it in the language's own test framework (JUnit, xUnit, PHPUnit, RSpec, XCTest), and name the source template in the header. A finding a test cannot exercise (a cloud setting) gets a scripted or manual check, and the verdict says so.
 
-### PoC Rules
-1. **Non-Destructive:** Test for vulnerability presence without causing permanent data destruction
-2. **Sandboxed:** Run locally against mock targets or sandboxed project instances. Never make external network requests without explicit user confirmation
-3. **Self-Contained:** Each test should be runnable independently
-4. **Race Conditions:** Use concurrent execution (`ThreadPoolExecutor`, `Promise.all`, goroutines) to test state-changing operations under load
+**Rules:** non-destructive; sandboxed (no external network without explicit confirmation); each test runs independently; races use concurrency (`ThreadPoolExecutor`, `Promise.all`, goroutines) within the caps in `rules.md` section 8.
 
 ---
 
-## Step 2: DAST - Live Service Testing (If Applicable)
+## Step 2: DAST (only for a running web service)
 
-When the project under audit is a **running web service**, supplement static PoC harnesses with live endpoint testing.
+Use when the project has HTTP/WebSocket endpoints runnable locally, Phase 0 found network-facing entry points as the main surface, or static findings need real requests to confirm.
 
-### When to Use DAST
-- The project has HTTP/WebSocket endpoints that can be started locally
-- Phase 0 identified network-facing entry points as the primary attack surface
-- Static analysis found potential vulnerabilities that can only be confirmed by sending actual HTTP requests
+**Pre-flight:** get user confirmation, presenting target, port, and test plan, then ask verbatim:
 
-### Pre-Flight Requirements
-1. **User confirmation required** before any DAST execution. Present the target URL, port, and test plan, then ask verbatim:
+> This will send test HTTP requests to [target]. Proceed?
 
-   > This will send test HTTP requests to [target]. Proceed?
+Run against `localhost` or a sandboxed container only.
 
-2. **Local only.** Run against `localhost` or a sandboxed Docker instance. Never target production, staging, or any shared environment without explicit user approval.
-
-### DAST Execution
-1. Start the local dev server (`npm run dev`, `python manage.py runserver`, `docker-compose up`, etc.)
-2. Run available DAST tools:
+1. Start the local server (`npm run dev`, `python manage.py runserver`, `docker-compose up`).
+2. Run available tools:
    ```bash
-   # Nuclei (template-based scanning)
-   nuclei -u http://localhost:PORT -t cves/ -t misconfigurations/ -o .security-audit/nuclei-raw.json -j
-   
-   # Nikto (web server misconfiguration)
-   nikto -h http://localhost:PORT -o .security-audit/nikto-raw.json -Format json
+   nuclei -u http://localhost:PORT -t cves/ -t misconfigurations/ -o .security-audit/raw/nuclei.json -j
+   nikto -h http://localhost:PORT -o .security-audit/raw/nikto.json -Format json
    ```
-3. Manual endpoint probing with curl/httpie for finding-specific payloads
-4. **Rate-limited:** Cap concurrent requests to 5 max, 100ms delay between requests
+3. Probe with curl/httpie using finding-specific payloads. Max 5 concurrent requests, 100ms delay.
 
-### DAST Findings
-DAST-discovered findings use the same finding schema as Phase 1, with `detectedBy: "DAST Scanner"` or `detectedBy: "Both"` if also found statically. Include the full HTTP request/response in the `exploitScenario` field.
+DAST findings use the Phase 1 schema with `detectedBy: "DAST Scanner"` (or `"Both"`), and the full request/response in `exploitScenario`.
 
 ---
 
-## Step 3: Record Test Verdicts
+## Step 3: Verdicts
 
-For each test, record a structured verdict:
+Per test:
 
 ```markdown
 ### Test: test_sec001_poc.py - targets SEC-001
-- **Payload/Method:** [what was sent/executed]
-- **Expected if Secure:** [what should happen if the vulnerability is fixed]
-- **Observed:** [what actually happened]
+- **Payload/Method:** what was sent or run
+- **Expected if Secure:** what happens once fixed
+- **Observed:** what happened
 - **Verdict:** Confirmed Exploitable | Partially Mitigated | Fully Mitigated | Inconclusive
 ```
 
-### Verdict Definitions
-| Verdict | Meaning | Impact on Finding |
+| Verdict | Meaning | Finding update |
 |---|---|---|
-| **Confirmed Exploitable** | PoC successfully demonstrates the vulnerability | Finding status → "Confirmed Exploitable", Confidence → High |
-| **Partially Mitigated** | Some controls exist but can be bypassed under specific conditions | Finding status → "Partially Mitigated", document bypass conditions |
-| **Fully Mitigated** | Controls prevent exploitation in all tested scenarios | Finding status → "Fully Mitigated", consider downgrading severity |
-| **Inconclusive** | Test could not definitively prove or disprove exploitability | Finding status → "Inconclusive", Confidence remains or lowers |
+| Confirmed Exploitable | PoC demonstrates the flaw | Status Confirmed Exploitable, Confidence High |
+| Partially Mitigated | Controls exist but are bypassable | Status Partially Mitigated; document bypass conditions |
+| Fully Mitigated | Controls hold in all tested cases | Status Fully Mitigated; consider downgrading |
+| Inconclusive | Test could not prove or disprove | Status Inconclusive; confidence stays or drops |
 
-### SARIF Output (Optional)
-If the project uses GitHub Code Scanning or VS Code SARIF Viewer, generate `.security-audit/security-tests/poc-results.sarif` alongside the test output. Map verdict to SARIF level:
-- Confirmed Exploitable → `error`
-- Partially Mitigated → `warning`
-- Inconclusive → `note`
+**SARIF (optional)** for GitHub Code Scanning or the VS Code viewer: `.security-audit/security-tests/poc-results.sarif`, with Confirmed = `error`, Partially Mitigated = `warning`, Inconclusive = `note`.
 
 ---
 
 ## Step 4: Update Findings
 
-Update `.security-audit/audit-checklist.md` and `.security-audit/security-findings.json` with:
-- Test result and verdict per finding
-- Updated confidence levels based on dynamic evidence
-- Updated status (Unconfirmed → Confirmed/Mitigated/Inconclusive)
-
----
-
-## Environment Safety Constraints
-
-- **Zero Remote Exfiltration:** All tests execute locally against mock data or isolated local targets
-- **No Production Side-Effects:** Use detection payloads (canary tokens, timing, error-based) not destructive ones
-- **Network Boundaries:** No external network requests during testing without explicit approval
-- **Resource Constraints:** Cap concurrent threads/goroutines to prevent local resource exhaustion
+Write the test result, verdict, updated confidence, and updated status to `audit-checklist.md` and `security-findings.json`.
 
 ---
 
 ## Gate to Proceed
 
-Do not advance to Phase 4 until:
 - [ ] Every finding has a test result and verdict
-- [ ] All test scripts exist in `.security-audit/security-tests/`
-- [ ] `audit-checklist.md` and `security-findings.json` are updated with verdicts
-- [ ] Findings that were "Fully Mitigated" have been downgraded or annotated accordingly
+- [ ] All scripts exist in `.security-audit/security-tests/`
+- [ ] Both findings files updated with verdicts
+- [ ] "Fully Mitigated" findings downgraded or annotated

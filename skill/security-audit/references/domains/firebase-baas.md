@@ -1,73 +1,73 @@
 # Vulnerability Reference: Firebase & Backend-as-a-Service (BaaS)
 
-_Load this during Phase 1 when the project uses Firebase (Firestore, Realtime Database, Firebase Auth, Storage, App Check, Cloud Functions) or a comparable BaaS (Supabase, AppWrite) where a **client talks directly to the database** and security rules - not server middleware - are the primary authorization boundary. Pairs with `auth-identity.md` and, for Cloud Functions, `web-api.md`._
+_Load in Phase 1 when the project uses Firebase (Firestore, Realtime DB, Auth, Storage, App Check, Cloud Functions) or a comparable BaaS (Supabase, AppWrite) where **the client talks directly to the database** and security rules, not server middleware, are the main authorization boundary. Pairs with `auth-identity.md`, and `web-api.md` for Cloud Functions._
 
-The defining property of BaaS: **the browser is a first-class database client.** Any control you expect a server to enforce (rate limiting, field projection, input shape, business invariants) is absent unless a security rule, an App Check gate, or a server endpoint provides it. Audit from the assumption that an attacker speaks the raw SDK/REST protocol, not your UI.
+The browser is a first-class database client. Any control a server would enforce (rate limiting, field projection, input shape, business invariants) is absent unless a rule, App Check, or a server endpoint provides it. Assume the attacker speaks the raw SDK/REST protocol, not your UI.
 
 ---
 
-## 1. Security-Rules Semantics - the gotchas that change remediation
+## 1. Security-Rules Semantics
 
-These are not "misconfigurations" - they are model properties that dictate what a fix can even look like. Get them wrong and you will recommend an impossible fix.
+These are model properties that decide what a fix can look like. Get them wrong and you recommend an impossible fix.
 
-- **Rules cannot project fields on read.** If `allow read` is `true`, the client receives the **entire document**, every field. You cannot "hide `userId` but show `userName`" with a rule. Consequences:
-  - Any secret/PII/authz-key field stored in a client-readable doc is **exposed to every reader** (CWE-200). Common leaks: internal `userId`/UID (often also the authz key), email, `stripeCustomerId`, moderation flags, `costPrice`/margin fields, soft-delete `isBanned` state.
-  - The only real fixes are: (a) don't store the sensitive field in the readable doc, (b) split sensitive fields into a sibling doc/collection that is *not* client-readable, or (c) set the collection read to `false` and mediate reads through a server endpoint (Cloud Function / your own API) that projects safe fields. A rule tweak alone cannot fix a field-exposure finding.
-- **`create` ≠ `update` ≠ `write`.** `allow write` grants create + update + delete. `allow create` fires only when the doc does **not** exist; `set()` on an existing doc is an update and is denied under create-only rules. Use this when judging severity: a create-only public collection can be *proliferated* (new docs) but existing docs cannot be *overwritten*. Don't overstate an "arbitrary write" finding that is actually create-only.
-- **`request.resource.data` vs `resource.data`.** `request.resource` is the incoming write (attacker-controlled on writes); `resource` is the existing doc. Authorizing a write against `request.resource.data.ownerId == request.auth.uid` is a classic hole - the attacker sets `ownerId` in the same write. Ownership checks must read the **existing** `resource.data`, or the field must be immutable (`request.resource.data.ownerId == resource.data.ownerId`).
-- **Validation only covers the keys you name.** A rule that checks four fields' types/sizes but ends with `keys().size() <= N` still lets the attacker add *other* unlisted keys (up to N) with arbitrary type and size. Any field the app later reads/aggregates/renders - but the rule doesn't bound - is attacker-controlled and unbounded. Enumerate every field the client actually writes (read the client SDK calls) and confirm each is either validated or provably unused.
-- **`allow read` is `get` + `list`.** Granting read can enable **enumeration** of a whole collection, not just single-doc fetch, unless you split `allow get` from `allow list`. Sensitive collections often want `get` but not `list`.
-- **Timestamps/authenticity.** `request.time` is trustworthy; a client-supplied `timestamp`/`createdAt` field is not, unless the rule pins it (`request.resource.data.createdAt == request.time`). Server-side `serverTimestamp()` in the SDK does not stop an attacker hitting the REST API with any value.
-- **Default-deny is necessary but not sufficient.** `match /{document=**} { allow read, write: if false; }` is correct hygiene, but each explicit `match` below it *widens* it. Audit every widening, not the default.
+- **Rules cannot project fields on read.** If `allow read` is `true`, the client gets the **whole document**. You cannot hide `userId` but show `userName` with a rule.
+  - Secrets, PII, and authz-key fields in a readable doc are exposed to every reader (CWE-200). Common leaks: UID (often the authz key), email, `stripeCustomerId`, moderation flags, `costPrice`, `isBanned`.
+  - Real fixes: (a) don't store the field in the readable doc, (b) move it to a sibling doc/collection that is not client-readable, or (c) set read to `false` and serve reads through a server endpoint that projects safe fields. A rule tweak cannot fix field exposure.
+- **`create` is not `update` is not `write`.** `write` = create + update + delete. `create` fires only when the doc does not exist; `set()` on an existing doc is an update and is denied under create-only rules. A create-only public collection can be proliferated but not overwritten. Don't overstate it as "arbitrary write".
+- **`request.resource.data` vs `resource.data`.** `request.resource` is the incoming, attacker-controlled write; `resource` is the existing doc. Checking `request.resource.data.ownerId == request.auth.uid` is a classic hole: the attacker sets `ownerId` in the same write. Check the **existing** `resource.data`, or make the field immutable (`request.resource.data.ownerId == resource.data.ownerId`).
+- **Validation covers only the keys you name.** A rule that types four fields but ends in `keys().size() <= N` still lets the attacker add other unlisted keys with any type and size. Enumerate every field the client writes (read the SDK calls) and confirm each is validated or provably unused.
+- **`read` = `get` + `list`.** Read can allow enumeration of a whole collection. Split `get` from `list`; sensitive collections often want `get` only.
+- **Timestamps.** `request.time` is trustworthy; a client `createdAt` is not unless pinned (`request.resource.data.createdAt == request.time`). `serverTimestamp()` in the SDK does not stop REST calls with any value.
+- **Default-deny is necessary, not sufficient.** `match /{document=**} { allow read, write: if false; }` is good hygiene, but every explicit `match` below it widens it. Audit each widening.
 
 ---
 
 ## 2. Authentication & Authorization
 
-- **Email is not an identity key.** Firebase email/password sign-ups are **not email-verified by default**, and a released email can be re-registered. Authorization keyed on `token.email` / `email_verified` is spoofable/takeover-prone. Authorization should key on the **UID** (immutable, never reused). Verify both the rules' `isAdmin()` and any server middleware use UID, and that the two lists match.
-- **Custom claims vs. hardcoded UID allowlists.** Small admin sets are often a UID list duplicated in `firestore.rules` and server code - flag drift between the two copies as a real risk (one gets updated, the other doesn't). Custom claims (`request.auth.token.admin == true`) centralize this but require the claim to be set only by a trusted server.
-- **ID token verification on the backend.** Cloud Functions / custom servers must call `verifyIdToken()` (which checks signature + expiry + revocation) - never trust a decoded-but-unverified JWT, and never trust a `uid` passed in the request body.
-- **`allow read: if request.auth != null`** means *any signed-in user*, including a freshly self-registered attacker account - not "the owner." Confirm the rule also constrains to the owner (`request.auth.uid == userId`).
+- **Email is not an identity key.** Email/password sign-ups are not verified by default and released emails can be re-registered. Auth on `token.email`/`email_verified` is spoofable. Key on the immutable **UID**. Check that `isAdmin()` in rules and server middleware both use UID and that the lists match.
+- **Custom claims vs UID allowlists.** A UID list duplicated in `firestore.rules` and server code will drift; flag it. Custom claims (`request.auth.token.admin == true`) centralize this but must be set only by a trusted server.
+- **Backend token verification.** Functions and servers must call `verifyIdToken()` (signature, expiry, revocation). Never trust a decoded-but-unverified JWT or a `uid` in the request body.
+- **`request.auth != null`** means any signed-in user, including a fresh attacker account, not "the owner". Confirm it also constrains to the owner (`request.auth.uid == userId`).
 
 ---
 
-## 3. Abuse, Cost & Data Integrity (client-direct writes)
+## 3. Abuse, Cost & Integrity (client-direct writes)
 
-- **No rate limit exists on direct SDK/REST writes.** Your Express/Cloud-Function rate limiter is bypassed entirely when the client writes straight to Firestore. An unauthenticated writable collection (analytics/telemetry/"contact form"/"waitlist") is a **cost-amplification and data-pollution** vector: each write bills, and aggregated fields feed dashboards the operator trusts. Mitigations: **App Check** enforcement on the collection, tighter rules (auth required, field bounds), or routing the write through a rate-limited server endpoint. Firestore rules cannot rate-limit by themselves.
-- **App Check is only real if enforced.** Wiring reCAPTCHA/App Check on the client does nothing until enforcement is enabled for the resource (Firestore/Storage/Functions). Confirm enforcement, not just SDK initialization. Debug tokens must not ship to production.
-- **Aggregation of unbounded fields.** When an admin dashboard sums/renders a field an attacker can write (e.g. `duration_seconds`, `product_name`), an attacker corrupts metrics or injects oversized strings. Bound the field in the rule (`is number && >= 0 && <= MAX`, or `is string && size() <= N`) using the optional-field pattern `!('f' in request.resource.data) || (<constraint>)` so legitimate events that omit the field still pass.
-- **`increment()` / counters.** Publicly writable counters (like/view/referral-click counts) can be inflated. Prefer server-mediated increments or dedup keyed on an authenticated identity.
+- **No rate limit exists on direct SDK/REST writes.** Your Express/Function limiter is bypassed. An unauthenticated writable collection (analytics, contact form, waitlist) is a cost-amplification and data-pollution vector, since each write bills and aggregates feed dashboards the operator trusts. Mitigate with **App Check** enforcement, tighter rules (auth, field bounds), or a rate-limited server endpoint. Rules cannot rate-limit.
+- **App Check works only when enforced.** Client SDK wiring does nothing until enforcement is on for Firestore/Storage/Functions. Verify enforcement, and that debug tokens don't ship to production.
+- **Unbounded aggregated fields.** If a dashboard sums or renders an attacker-writable field (`duration_seconds`, `product_name`), the attacker corrupts metrics or injects oversized strings. Bound it: `is number && >= 0 && <= MAX`, or `is string && size() <= N`, using `!('f' in request.resource.data) || (<constraint>)` so events omitting the field still pass.
+- **Public counters** (likes, views, referral clicks) can be inflated. Use server-mediated increments or dedup on an authenticated identity.
 
 ---
 
 ## 4. Storage
 
-- **Storage rules are separate from Firestore rules** and default to requiring auth - but are frequently opened to `if true` for "public" buckets. Check: content-type/size limits (`request.resource.size`, `request.resource.contentType`), path-scoping to the owner's UID, and that user-uploaded files can't be served as active content (HTML/SVG/JS) from a same-origin path (stored-XSS).
-- **Signed URLs / download tokens** in client-readable docs are effectively public credentials - treat as secret-in-readable-doc (§1).
+- Storage rules are separate from Firestore rules and frequently opened to `if true`. Check content-type and size limits (`request.resource.size`, `request.resource.contentType`), UID path scoping, and that uploads can't be served as active content (HTML/SVG/JS) from a same-origin path (stored XSS).
+- Signed URLs and download tokens in client-readable docs are public credentials. Treat as a secret in a readable doc (section 1).
 
 ---
 
 ## 5. Client Config & Secrets
 
-- **The Firebase web config (`apiKey`, `projectId`, `appId`) is public by design** - it is an identifier, not a secret. Do **not** report it as a leaked credential. The real boundary is rules + App Check.
-- **Do** report: a **service-account JSON** (private key) committed or shipped to the client, Admin SDK credentials in client-reachable code, or `FIREBASE_SERVICE_ACCOUNT_*` / `.env` values bundled by the front-end build. Confirm the service account is gitignored **and** absent from git history and the hosting `public` output. (With Vite/CRA, only `VITE_`/`REACT_APP_`-prefixed vars are exposed - verify no secret carries such a prefix.)
-- **Hosting `public` dir.** Confirm the deployed directory (e.g. `dist`) does not contain the service account, `.env`, or `.firebaserc` secrets, and that the `ignore` globs actually exclude them.
+- The web config (`apiKey`, `projectId`, `appId`) is **public by design**. It is an identifier, not a secret; do not report it. The real boundary is rules plus App Check.
+- **Do** report: a service-account JSON (private key) committed or shipped to the client, Admin SDK credentials in client-reachable code, `FIREBASE_SERVICE_ACCOUNT_*` or `.env` values bundled by the front-end build. Confirm the service account is gitignored, absent from git history, and absent from the hosting `public` output. (Vite/CRA expose only `VITE_`/`REACT_APP_` vars; check no secret carries such a prefix.)
+- Confirm the deployed directory (e.g. `dist`) has no service account, `.env`, or `.firebaserc` secrets, and that the hosting `ignore` globs exclude them.
 
 ---
 
-## 6. Cloud Functions / custom backend (if present)
+## 6. Cloud Functions / custom backend
 
-Audit under `web-api.md`, plus BaaS-specific notes:
-- The Admin SDK **bypasses all security rules** - every Function is implicitly "root" on the database. Authorization must be enforced *in the Function code*, not assumed from rules.
-- Callable vs. HTTP functions: callable functions verify the Firebase Auth context automatically; raw HTTP functions do not - they must verify the ID token themselves and set CORS.
-- Webhook endpoints (Stripe, etc.) must verify signatures on the **raw** body before any parsing.
+Audit under `web-api.md`, plus:
+- The Admin SDK **bypasses all rules**: every Function is root on the database. Enforce authorization in the Function code.
+- Callable functions verify the Auth context automatically; raw HTTP functions must verify the ID token and set CORS themselves.
+- Webhooks (Stripe, etc.) must verify signatures on the **raw** body before parsing.
 
 ---
 
-## Triage priorities for this domain
+## Triage priorities
 
-1. **Field exposure in client-readable docs** (§1) - trace every readable collection's full document shape against what the UI needs; the delta is the leak.
-2. **Ownership checks against `request.resource` instead of `resource`** (§1) - privilege escalation / IDOR.
-3. **`request.auth != null` used where owner-only was intended** (§2).
-4. **Unauthenticated/unbounded writable collections** (§3) - cost + integrity, gated only by App Check enforcement you must verify.
-5. **Service-account / Admin credentials reachable by clients** (§5) - full compromise if present.
+1. **Field exposure in client-readable docs** (section 1): compare each readable collection's full document shape to what the UI needs; the delta is the leak.
+2. **Ownership checks on `request.resource` instead of `resource`** (section 1): privilege escalation / IDOR.
+3. **`request.auth != null` where owner-only was intended** (section 2).
+4. **Unauthenticated or unbounded writable collections** (section 3): cost and integrity, gated only by App Check enforcement you must verify.
+5. **Service-account or Admin credentials reachable by clients** (section 5): full compromise.

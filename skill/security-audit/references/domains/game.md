@@ -1,136 +1,65 @@
 # Vulnerability Reference: Game Security
 
-_Load this during Phase 1 when auditing game clients, game servers, multiplayer networking, virtual economies, or game-adjacent services (matchmaking, leaderboards, item marketplaces)._
+_Load in Phase 1 for game clients, game servers, multiplayer networking, virtual economies, or game services (matchmaking, leaderboards, item marketplaces)._
 
 ---
 
-## 1. Client-Side State Manipulation
+## 1. Client-Side State
 
-### Memory Tampering
-- Game state stored client-side without server validation (health, ammo, position, inventory)
-- Client-authoritative movement/physics allowing speed hacks and teleportation
-- Memory values modifiable via external tools (Cheat Engine, GameGuardian)
-- Missing server-side validation of client-reported game state changes
+**Memory tampering**
+- State held client-side without server validation (health, ammo, position, inventory)
+- Client-authoritative movement/physics (speed hacks, teleport)
+- Values editable with Cheat Engine or GameGuardian; client-reported changes not validated server-side
 
-### Client Binary Exploitation
-- Missing code obfuscation allowing reverse engineering of game logic
-- Unencrypted network protocol enabling packet crafting
-- Debug builds or symbols shipped in production releases
-- Anti-cheat bypass via DLL injection, hooking, or driver-level manipulation
+**Binary**
+- No obfuscation; unencrypted protocol enables packet crafting
+- Debug builds or symbols shipped
+- Anti-cheat bypass via DLL injection, hooking, or drivers
 
-### Asset Tampering
-- Local asset files (textures, models, configs) modifiable for competitive advantage (wallhacks, transparent textures)
-- Missing asset integrity verification (checksum/hash validation)
-- Configuration files containing gameplay-affecting values editable by players
+**Assets**
+- Local textures, models, configs editable for advantage (wallhacks, transparent textures); no integrity checks
+- Gameplay-affecting config values player-editable
 
----
+## 2. Network & Multiplayer
 
-## 2. Network & Multiplayer Security
+- Plaintext UDP/TCP; no packet authentication (forged packets accepted); no sequence numbers or replay protection
+- No rate limit on game actions (auto-fire, macros)
+- Desync enabling duplication glitches; rollback/netcode "undo" exploits; lag switching; interpolation abuse
+- Client-authoritative logic ("I killed player X" accepted unchecked); no server-side hit validation; trusting client timestamps or frame counts
 
-### Protocol Security
-- Game protocol transmitted over unencrypted channels (plaintext UDP/TCP)
-- Missing packet authentication (forged packets accepted by server)
-- Missing sequence numbers or replay protection (action replay attacks)
-- Missing rate limiting on game actions (auto-fire, auto-click, macro abuse)
+## 3. Virtual Economy
 
-### Desync & Exploitation
-- Client-server desynchronization exploitable for duplication glitches
-- Rollback/netcode exploits allowing players to "undo" damage or losses
-- Lag switching - intentional latency manipulation for advantage
-- Position interpolation exploits (rubber-banding abuse)
+**Currency**
+- Negative-value transactions (negative price gains currency)
+- Integer overflow/underflow in currency math
+- Buy/sell races (double spend); non-atomic transactions leaving inconsistent state
 
-### Server Authority
-- Client-authoritative game logic (client tells server "I killed player X" without server verification)
-- Missing server-side hit detection/validation
-- Trust of client-reported timestamps or frame counts
+**Duplication**
+- Trade/mail race conditions; crash-during-trade rollback (both keep items); gift/transfer exploits; non-idempotent item creation
 
----
+**Marketplace**
+- Coordinated price manipulation; sniping bots; cross-currency arbitrage; no rate limits on list/delist
 
-## 3. Virtual Economy & Currency Exploits
+## 4. Accounts
 
-### Currency Manipulation
-- Negative value transactions (buying items for negative price → gaining currency)
-- Integer overflow/underflow in currency calculations
-- Race conditions in simultaneous buy/sell operations (double-spend)
-- Missing transaction atomicity (partial failures leaving inconsistent state)
+- Session fixation or token theft; no 2FA on high-value accounts; weak recovery open to social engineering; no account-sharing detection
+- Progression abuse: achievements or levels via API, XP injection, rank manipulation (deranking, boosting)
+- Ban evasion: HWID spoofing, frictionless new accounts (no CAPTCHA or email verification), VPN around IP bans
 
-### Item Duplication
-- Duplication via trade/mail system race conditions
-- Rollback-based duplication (crash during trade → both parties keep items)
-- Gift/transfer exploits between accounts
-- Missing idempotency on item creation endpoints
+## 5. Anti-Cheat
 
-### Marketplace Abuse
-- Price manipulation via coordinated buying/selling (market manipulation)
-- Sniping bots on time-limited offers
-- Cross-currency arbitrage exploits
-- Missing rate limits on marketplace listing/delisting
+- No server-side statistical analysis (impossible accuracy, speed, reaction); no behavioral bot detection
+- Client-side-only anti-cheat falls to kernel-level access
+- Anti-cheat itself as risk: vulnerable kernel drivers, bypass via virtualization, no integrity checks on its components
 
----
+## 6. Content & Social
 
-## 4. Account & Authentication Security
-
-### Account Takeover
-- Session fixation or token theft enabling account hijacking
-- Missing 2FA on high-value accounts
-- Weak password recovery allowing social engineering attacks
-- Account sharing detection and prevention
-
-### Progression Abuse
-- Achievement/level unlocking via API manipulation
-- Experience/XP injection through modified game data
-- Rank manipulation via matchmaking abuse (deranking, boosting)
-
-### Ban Evasion
-- Hardware ID (HWID) spoofing to circumvent bans
-- New account creation without friction (missing CAPTCHA, email verification)
-- IP ban circumvention via VPN (consider fingerprinting alternatives)
-
----
-
-## 5. Anti-Cheat Considerations
-
-### Detection Gaps
-- Missing server-side statistical analysis (impossible accuracy, impossible speed, impossible reaction time)
-- No behavioral analysis for automated play (bots, macros)
-- Client-side-only anti-cheat easily bypassed via kernel-level access
-
-### Anti-Cheat Security
-- Anti-cheat system itself being a security risk (kernel drivers with vulnerabilities)
-- Anti-cheat bypass via virtualization
-- Missing integrity checks on anti-cheat components
-
----
-
-## 6. Content & Social Security
-
-### User-Generated Content (UGC)
-- XSS via player names, chat messages, guild names, item descriptions
-- SQL injection via in-game search, leaderboard, or profile fields
-- Image/file upload vulnerabilities in avatar or custom content systems
-- Missing content moderation on user-generated levels/maps
-
-### Chat & Communication
-- Missing profanity/hate speech filtering
-- Private message abuse (spam, phishing, RMT advertising)
-- Voice chat abuse without reporting mechanism
-
----
+- XSS via player names, chat, guild names, item descriptions; SQLi via search, leaderboard, profile fields
+- Upload flaws in avatars or custom content; no moderation of user-made levels or maps
+- No profanity filtering; private-message spam, phishing, RMT ads; voice chat without reporting
 
 ## 7. Platform-Specific
 
-### Mobile Games
-- In-app purchase receipt validation bypass (fake receipts)
-- Client-side reward calculation for ad-watching
-- Jailbreak/root detection bypass allowing save file manipulation
-- Time manipulation attacks (changing device clock for timed events)
-
-### Web-Based Games
-- WebSocket message tampering (inspect → modify → replay)
-- Browser developer tools enabling state inspection/modification
-- Missing CSP allowing injection of cheat scripts
-
-### Blockchain Games / Play-to-Earn
-- Smart contract vulnerabilities in reward distribution (see `blockchain-smart-contracts.md`)
-- Front-running on reward claims (MEV extraction)
-- Economic model exploits (infinite mint, deflationary spiral)
+- **Mobile:** forged in-app purchase receipts; client-side ad-reward calculation; root/jailbreak bypass enabling save edits; device clock changes for timed events
+- **Web:** WebSocket tamper-and-replay; state edits via dev tools; no CSP (cheat script injection)
+- **Blockchain / play-to-earn:** reward-contract flaws (see `blockchain.md`); front-running reward claims (MEV); economy exploits (infinite mint, deflationary spiral)

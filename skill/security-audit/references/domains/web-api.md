@@ -27,6 +27,22 @@ _If `auth-identity.md` is also loaded, record access-control findings there and 
 - Missing local IP blocking (`127.0.0.1`, `169.254.169.254`, `10.x.x.x`, `fd00::`)
 - Missing scheme restriction (allowing `file://`, `gopher://`, `dict://`)
 - Cloud metadata endpoint access (`http://169.254.169.254/latest/meta-data/`)
+- Bypass forms: DNS rebinding, redirects to internal hosts, decimal/octal/IPv6-mapped IPs. Validate after resolving, not before
+
+### CSRF (OWASP 2007-2013)
+- State-changing routes using cookie auth with no anti-CSRF token and no `SameSite=Lax/Strict`
+- State change on GET; JSON endpoints accepting `text/plain` or form bodies
+
+### Open Redirect (OWASP 2010-2013)
+- `redirect`/`next`/`returnUrl` params used in a redirect with no allowlist (prefix checks like `startsWith("/")` fail on `//evil.com`)
+
+### Path Traversal / Forced Browsing (OWASP 2004-2007)
+- User input in file paths (`../`, absolute paths, encoded `%2e%2e`, zip-slip on archive extract)
+- Unlinked admin/debug/backup routes that rely on obscurity, not an auth check
+
+### File Upload
+- No type check on content (extension and MIME alone are spoofable), executable or script extensions served from the web root
+- Upload path or filename from the client; no size limit; SVG/HTML uploads served inline (stored XSS)
 
 ---
 
@@ -49,6 +65,15 @@ _If `auth-identity.md` is also loaded, record access-control findings there and 
 - No `X-Frame-Options` or `frame-ancestors` in CSP
 - No `Strict-Transport-Security` (HSTS)
 - No `X-Content-Type-Options: nosniff`
+
+### XXE (OWASP 2017 A04)
+- XML parsers with DTD or external entities enabled (`DocumentBuilderFactory`, `lxml` with `resolve_entities`, `libxml`); also SVG, DOCX, XLSX and SOAP inputs
+
+### Proxy, Host and Cache Layer
+- Request smuggling: front end and back end disagree on `Content-Length` vs `Transfer-Encoding`
+- Host header used to build links or reset URLs (password reset poisoning)
+- Web cache poisoning or deception: unkeyed headers reflected in cached responses, private pages cached by path suffix
+- Dangling DNS/CNAME records to deprovisioned services (subdomain takeover)
 
 ---
 
@@ -89,6 +114,11 @@ _If `auth-identity.md` is also loaded, record access-control findings there and 
 - TLS verification disabled (`verify=False`, `rejectUnauthorized: false`)
 - Hardcoded certificates or certificate pinning bypass
 
+### Sensitive Data Exposure (OWASP 2013-2017)
+- Secrets or tokens in URLs/query strings (logged, cached, leaked via Referer)
+- Sensitive responses without `Cache-Control: no-store`; PII or cards stored in cleartext or over-collected
+- API responses returning whole objects (hashes, internal IDs, flags) and relying on the client to hide fields
+
 ---
 
 ## A05:2025 - Injection
@@ -101,6 +131,14 @@ _If `auth-identity.md` is also loaded, record access-control findings there and 
 ### Command Injection
 - `os.system()`, `subprocess.Popen(..., shell=True)`, `exec.Command("sh", "-c", ...)`, `child_process.exec()` with user input
 - Missing input validation before shell execution
+- Argument injection: user value starting with `-` passed to `git`, `curl`, `tar`; use `--` and an allowlist
+
+### Code and Expression Injection
+- `eval`, `Function()`, `exec`, `vm`, SpEL/OGNL/EL expression evaluation of user input
+
+### Other Interpreters
+- LDAP, XPath, XSLT, and ORM/GraphQL filter injection; HTTP parameter pollution (duplicate params handled differently by WAF and app)
+- Log injection (CWE-117): newlines in user input forging log entries
 
 ### Template Injection (SSTI)
 - Unescaped user input in Jinja2, EJS, Handlebars, Twig, ERB (`{{ user_input }}`, `Markup()`, `|safe`)
@@ -134,8 +172,8 @@ Do not duplicate those findings here. If the project genuinely has no authentica
 ## A08:2025 - Software & Data Integrity Failures
 
 ### Deserialization
-- Unsafe deserialization of untrusted data (`pickle.loads()`, `yaml.load()`, `JSON.parse()` + `eval()`)
-- Missing integrity checks on serialized data
+- Unsafe deserialization of untrusted data (`pickle.loads()`, `yaml.load()`, Java `ObjectInputStream`, .NET `BinaryFormatter`, PHP `unserialize`, Ruby `Marshal.load`, parse-then-evaluate patterns)
+- Missing integrity checks on serialized data; client-held state (cookies, hidden fields) trusted without a signature
 
 ### Code Integrity
 - Auto-update mechanisms without signature verification
