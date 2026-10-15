@@ -9,16 +9,11 @@ Covers web apps, APIs, CLIs, mobile, desktop, browser extensions, IaC/cloud, LLM
 Paste this into Claude Code, Codex, or Cursor:
 
 ```
-Install the security-audit skill from https://github.com/sam-cre/Security_Audit_Skill.
-Clone it, run the installer for my OS (install.ps1 on Windows, install.sh otherwise), confirm
-~/.claude/skills/security-audit/SKILL.md exists, then tell me to restart. Ask before anything else.
-```
-
-For Codex or Cursor, which do not auto-install, use this instead:
-
-```
-Clone https://github.com/sam-cre/Security_Audit_Skill, then for every security audit I ask for,
-follow skill/security-audit/SKILL.md and load the references it points to.
+Set up the security-audit skill from https://github.com/sam-cre/Security_Audit_Skill.
+Clone it. If you are Claude Code, run the installer for my OS (install.ps1 on Windows,
+install.sh otherwise) and confirm ~/.claude/skills/security-audit/SKILL.md exists.
+Otherwise, use skill/security-audit/SKILL.md as the workflow for any security audit I ask for.
+Then tell me what you did and whether I need to restart.
 ```
 
 ## Manual install
